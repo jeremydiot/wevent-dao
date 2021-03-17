@@ -14,21 +14,25 @@ import fr.jdiot.wevent.dao.util.UtilDao;
 
 public final class DbManager {
 
-	private DbManager() {}
+	private ConnectionPool connectionPool;
 	
-	public static void upConf() {
+public DbManager(ConnectionPool connectionPoolArg) {
+		connectionPool = connectionPoolArg;
+	}
+	
+	public void upConf() {
 		createUserTable();
 		createEventTable();
 		createGuestTable();
 		createFriendTable();
 	}
 	
-	public static void resetConf() {
+	public void resetConf() {
 		downConf();
 		upConf();
 	}
 	
-	public static void downConf() {
+	public void downConf() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -36,13 +40,12 @@ public final class DbManager {
 				  FriendContract.TABLE_NAME+","
 				+ GuestContract.TABLE_NAME+","
 				+ EventContract.TABLE_NAME+","
-				+ UserContract.TABLE_NAME
-				);
+				+ UserContract.TABLE_NAME);
 		
 		try {
-			connection = ConnectionPool.getInstance().getConnection();
+			connection = this.connectionPool.getConnection();
 			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
-			preparedStatement.execute();
+			preparedStatement.executeQuery();
 			
 			
 		} catch (SQLException e) {
@@ -52,7 +55,7 @@ public final class DbManager {
 		}
 	}
 	
-	private static void createEventTable() {
+	private void createEventTable() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -68,7 +71,7 @@ public final class DbManager {
 				);  
 		
 		try {
-			connection = ConnectionPool.getInstance().getConnection();
+			connection = this.connectionPool.getConnection();
 			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
 			preparedStatement.execute();
 			
@@ -80,7 +83,7 @@ public final class DbManager {
 		}
 	}
 	
-	private static void createFriendTable() {
+	private void createFriendTable() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -91,7 +94,7 @@ public final class DbManager {
 				  +FriendContract.TABLE_CONSTRAINT
 				);  
 		try {
-			connection = ConnectionPool.getInstance().getConnection();
+			connection = this.connectionPool.getConnection();
 			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
 			preparedStatement.execute();
 			
@@ -103,7 +106,7 @@ public final class DbManager {
 		}	
 	}
 	
-	private static void createGuestTable() {
+	private void createGuestTable() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -115,7 +118,7 @@ public final class DbManager {
 				);
 
 		try {
-			connection = ConnectionPool.getInstance().getConnection();
+			connection = this.connectionPool.getConnection();
 			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
 			preparedStatement.execute();
 			
@@ -127,7 +130,7 @@ public final class DbManager {
 		}
 	}
 	
-	private static void createUserTable() {
+	private void createUserTable() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -141,7 +144,7 @@ public final class DbManager {
 				  +UserContract.COL_MODIFIED_AT_NAME+" "+UserContract.COL_MODIFIED_AT_DATATYPE+" "+UserContract.COL_MODIFIED_AT_CONSTRAINT
 				);  
 		try {
-			connection = ConnectionPool.getInstance().getConnection();
+			connection = this.connectionPool.getConnection();
 			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
 			preparedStatement.execute();
 			

@@ -7,9 +7,6 @@ import org.apache.commons.dbcp2.BasicDataSource;
 
 public final class ConnectionPool {
 	
-	private static final String URL = "jdbc:postgresql://127.0.0.1:5432/wevent";
-	private static final String USER = "root";
-	private static final String PASSWORD = "root";
 	private static final String DRIVER = "org.postgresql.Driver";
 	
 	private static final int MIN_IDLE = 5;
@@ -20,18 +17,18 @@ public final class ConnectionPool {
 	
 	private BasicDataSource basicDataSource;
 	
-	private ConnectionPool(BasicDataSource basicDataSourceArg) {
+	public ConnectionPool(BasicDataSource basicDataSourceArg) {
 		 this.basicDataSource = basicDataSourceArg;
 	}
 	
-	public static ConnectionPool getInstance() {
+	public static ConnectionPool getInstance(String url, String user, String password) {
 		if (basicDataSourceSingleton == null) {
 			
 			basicDataSourceSingleton = new BasicDataSource();
 			basicDataSourceSingleton.setDriverClassName(DRIVER);
-			basicDataSourceSingleton.setUrl(URL);
-			basicDataSourceSingleton.setUsername(USER);
-			basicDataSourceSingleton.setPassword(PASSWORD);
+			basicDataSourceSingleton.setUrl(url);
+			basicDataSourceSingleton.setUsername(user);
+			basicDataSourceSingleton.setPassword(password);
 			
 			basicDataSourceSingleton.setMinIdle(MIN_IDLE);
 			basicDataSourceSingleton.setMaxIdle(MAX_IDLE);
