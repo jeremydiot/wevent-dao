@@ -1,0 +1,37 @@
+package fr.jdiot.wevent.dao.entity;
+
+import java.sql.Timestamp;
+
+public class Guest {
+	
+	private User user;
+	private Event event;
+	private Timestamp createdAt;
+	
+	public Guest() {}
+	
+	public Guest(User user, Event event, Timestamp createdAt) {
+		this.user = user;
+		this.event = event;
+		this.createdAt = createdAt;
+	}
+	
+	public User getUser() {
+		return user;
+	}
+	public void setUser(User user) {
+		this.user = user;
+	}
+	public Event getEvent() {
+		return event;
+	}
+	public void setEvent(Event event) {
+		this.event = event;
+	}
+	public Timestamp getCreatedAt() {
+		return createdAt;
+	}
+	public void setCreatedAt(Timestamp createdAt) {
+		this.createdAt = createdAt;
+	}
+}
