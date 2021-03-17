@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import fr.jdiot.wevent.dao.common.ConnectionPool;
 import fr.jdiot.wevent.dao.contract.UserContract;
 import fr.jdiot.wevent.dao.entity.User;
@@ -39,7 +41,7 @@ public final class UserDao extends CommonDao<User> {
 	    	connexion = this.connectionPool.getConnection();
 	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
 	    			entity.getUsername(),
-	    			entity.getPassword(),
+	    			hashPassword(entity.getPassword()),
 	    			entity.getEmail(),
 	    			entity.getConnectedAt());
 	    	
@@ -110,7 +112,7 @@ public final class UserDao extends CommonDao<User> {
 	    	connexion = this.connectionPool.getConnection();
 	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
 	    			entity.getUsername(),
-	    			entity.getPassword(),
+	    			hashPassword(entity.getPassword()),
 	    			entity.getEmail(),
 	    			entity.getConnectedAt(),
 	    			entity.getId());
@@ -194,6 +196,14 @@ public final class UserDao extends CommonDao<User> {
 		user.setModifiedAt(resultSet.getTimestamp(UserContract.COL_MODIFIED_AT_NAME));
 		return user;
 		
+	}
+	
+	private static String hashPassword(String password) {
+	    return BCrypt.hashpw(password, BCrypt.gensalt());
+	}
+	
+	public static boolean checkPassword(User user, String candidatePwd) {
+	    return BCrypt.checkpw(candidatePwd, user.getPassword());
 	}
 
 }
