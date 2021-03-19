@@ -108,11 +108,21 @@ public final class UserDao extends CommonDao<User> {
 	    		+ UserContract.COL_CONNECTED_AT_NAME+" = ?"
 	    		, UserContract.COL_ID_NAME+" = ?");
 		
+	    User databaseUser = findById(entity.getId()); 
+	    
+	    if(databaseUser.getPassword() != entity.getPassword()) {
+	    	if(checkPassword(entity.getPassword(),databaseUser.getPassword())) {
+	    		entity.setPassword(databaseUser.getPassword());
+	    	}else {
+	    		entity.setPassword(hashPassword(entity.getPassword()));
+	    	}
+	    }
+	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
 	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
 	    			entity.getUsername(),
-	    			hashPassword(entity.getPassword()),
+	    			entity.getPassword(),
 	    			entity.getEmail(),
 	    			entity.getConnectedAt(),
 	    			entity.getId());
@@ -202,8 +212,8 @@ public final class UserDao extends CommonDao<User> {
 	    return BCrypt.hashpw(password, BCrypt.gensalt());
 	}
 	
-	public static boolean checkPassword(User user, String candidatePwd) {
-	    return BCrypt.checkpw(candidatePwd, user.getPassword());
+	public static boolean checkPassword(String candidatePwd, String hashedPwd) {
+	    return BCrypt.checkpw(candidatePwd, hashedPwd);
 	}
 
 }
