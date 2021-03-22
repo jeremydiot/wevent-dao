@@ -4,8 +4,10 @@ public final class SqlPattern {
 	
 	private SqlPattern () {}
 
-	public static final String CREATE_DATABASE= "CREATE DATABASE %s ENCODING = 'UTF8'";
+	public static final String CREATE_DATABASE= "CREATE DATABASE %s ENCODING = '%s'";
 	public static final String DROP_DATABASE = "DROP DATABASE IF EXISTS %s";
+	
+	public static final String CREATE_EXTENSION = "CREATE EXTENSION IF NOT EXISTS '%s'";
 	
 	public static final String CREATE_TABLE = "CREATE TABLE %s (%s)";
 	public static final String DROP_TABLE = "DROP TABLE %s";
