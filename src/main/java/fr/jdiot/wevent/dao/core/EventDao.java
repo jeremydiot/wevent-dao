@@ -8,6 +8,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import fr.jdiot.wevent.dao.common.ConnectionPool;
 import fr.jdiot.wevent.dao.contract.EventContract;
 import fr.jdiot.wevent.dao.entity.Event;
@@ -17,6 +20,8 @@ import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
 
 public final class EventDao extends CommonDao<Event> {
+	
+	protected static final Logger logger = LogManager.getLogger();
 
 	public EventDao(ConnectionPool connectionPool) {
 		super(connectionPool);
@@ -24,6 +29,7 @@ public final class EventDao extends CommonDao<Event> {
 
 	@Override
 	public Event create(Event entity) {
+		
 	    Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
@@ -49,7 +55,9 @@ public final class EventDao extends CommonDao<Event> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Event creation failed.");	    		
+	    		
+	    		logger.error(new DaoException("Event creation failed."));
+	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -57,11 +65,14 @@ public final class EventDao extends CommonDao<Event> {
 	    	if(resultSet.next()) {
 	    		newEvent = resultSetToEventEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("Event creation failed.");
+	    		
+	    		logger.error(new DaoException("Event creation failed."));
+	    		
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
+			
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -71,6 +82,7 @@ public final class EventDao extends CommonDao<Event> {
 
 	@Override
 	public void delete(Event entity) {
+		
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
 	    
@@ -83,11 +95,15 @@ public final class EventDao extends CommonDao<Event> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Event delete failed.");	    		
+	    		
+	    		logger.error(new DaoException("Event delete failed."));
+	    		
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			
+			logger.error(new DaoException(e));
+			
 		}finally {
 			UtilDao.silentClose(preparedStatement, connexion);
 		}
@@ -95,6 +111,7 @@ public final class EventDao extends CommonDao<Event> {
 
 	@Override
 	public Event update(Event entity) {
+		
 	    Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
 	    ResultSet resultSet = null;
@@ -121,7 +138,8 @@ public final class EventDao extends CommonDao<Event> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Event update failed.");	    		
+	    		
+	    		logger.error(new DaoException("Event update failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -129,11 +147,11 @@ public final class EventDao extends CommonDao<Event> {
 	    	if(resultSet.next()) {
 	    		updatedEvent = resultSetToEventEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("Event creation failed.");
+	    		logger.error(new DaoException("Event update failed."));
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -161,7 +179,7 @@ public final class EventDao extends CommonDao<Event> {
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -194,20 +212,26 @@ public final class EventDao extends CommonDao<Event> {
 		return events;
 	}
 	
-	private Event resultSetToEventEntity(ResultSet resultSet) throws SQLException {
-		
+	private Event resultSetToEventEntity(ResultSet resultSet)  {
 		UserDao userDao = new UserDao(this.connectionPool);
-		User admin = userDao.findById(resultSet.getString(EventContract.COL_ADMIN_ID_NAME));
-		
 		Event event = new Event();
-		event.setId(resultSet.getString(EventContract.COL_ID_NAME));
-		event.setAdmin(admin);
-		event.setTitle(resultSet.getString(EventContract.COL_TITLE_NAME));
-		event.setStartDate(resultSet.getTimestamp(EventContract.COL_START_DATE_NAME));
-		event.setEndDate(resultSet.getTimestamp(EventContract.COL_END_DATE_NAME));
-		event.setContent(resultSet.getString(EventContract.COL_CONTENT_NAME));
-		event.setCreatedAt(resultSet.getTimestamp(EventContract.COL_CREATED_AT_NAME));
-		event.setModifiedAt(resultSet.getTimestamp(EventContract.COL_MODIFIED_AT_NAME));
+		
+		try {
+			
+			User admin = userDao.findById(resultSet.getString(EventContract.COL_ADMIN_ID_NAME));
+			
+			event.setId(resultSet.getString(EventContract.COL_ID_NAME));
+			event.setAdmin(admin);
+			event.setTitle(resultSet.getString(EventContract.COL_TITLE_NAME));
+			event.setStartDate(resultSet.getTimestamp(EventContract.COL_START_DATE_NAME));
+			event.setEndDate(resultSet.getTimestamp(EventContract.COL_END_DATE_NAME));
+			event.setContent(resultSet.getString(EventContract.COL_CONTENT_NAME));
+			event.setCreatedAt(resultSet.getTimestamp(EventContract.COL_CREATED_AT_NAME));
+			event.setModifiedAt(resultSet.getTimestamp(EventContract.COL_MODIFIED_AT_NAME));
+			
+		}catch (SQLException e) {
+			logger.error(new DaoException(e));
+		}
 		
 		return event;
 	}

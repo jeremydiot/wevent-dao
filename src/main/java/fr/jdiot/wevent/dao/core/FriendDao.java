@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import fr.jdiot.wevent.dao.common.ConnectionPool;
 import fr.jdiot.wevent.dao.contract.FriendContract;
 import fr.jdiot.wevent.dao.entity.Friend;
@@ -17,6 +20,8 @@ import fr.jdiot.wevent.dao.util.UtilDao;
 
 public final class FriendDao extends CommonDao<Friend> {
 
+	protected static final Logger logger = LogManager.getLogger();
+	
 	public FriendDao(ConnectionPool connectionPool) {
 		super(connectionPool);
 	}
@@ -42,7 +47,7 @@ public final class FriendDao extends CommonDao<Friend> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Friend creation failed.");	    		
+	    		logger.error(new DaoException("Friend creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -50,11 +55,11 @@ public final class FriendDao extends CommonDao<Friend> {
 	    	if(resultSet.next()) {
 	    		newFriend = resultSetToFriendEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("Friend creation failed.");
+	    		logger.error(new DaoException("Friend creation failed."));
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -78,11 +83,11 @@ public final class FriendDao extends CommonDao<Friend> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Friend delete failed.");	    		
+	    		logger.error(new DaoException("Friend delete failed."));	    		
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connection);
 		}
@@ -90,7 +95,8 @@ public final class FriendDao extends CommonDao<Friend> {
 
 	@Override
 	public Friend update(Friend entity) {
-		throw new DaoException("Method not implemented.");
+		logger.error(new DaoException("Method not implemented."));
+		return null;
 	}
 	
 	@Override
@@ -113,7 +119,7 @@ public final class FriendDao extends CommonDao<Friend> {
 			}
 			
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -126,18 +132,25 @@ public final class FriendDao extends CommonDao<Friend> {
 		return friends;
 	}
 	
-	private Friend resultSetToFriendEntity(ResultSet resultSet) throws SQLException {
+	private Friend resultSetToFriendEntity(ResultSet resultSet) {
 		
 		UserDao userDao = new UserDao(this.connectionPool);
-		
-		User user = userDao.findById(resultSet.getString(FriendContract.COL_USER_ID_NAME));
-		User friendUser = userDao.findById(resultSet.getString(FriendContract.COL_FRIEND_ID_NAME));
-		
 		Friend friend = new Friend();
-		friend.setUser(user);
-		friend.setFriend(friendUser);
-		friend.setCreatedAt(resultSet.getTimestamp(FriendContract.COL_CREATED_AT_NAME));
 		
+		try {
+			
+			User user = userDao.findById(resultSet.getString(FriendContract.COL_USER_ID_NAME));
+			User friendUser = userDao.findById(resultSet.getString(FriendContract.COL_FRIEND_ID_NAME));
+			
+			
+			friend.setUser(user);
+			friend.setFriend(friendUser);
+			friend.setCreatedAt(resultSet.getTimestamp(FriendContract.COL_CREATED_AT_NAME));
+			
+		} catch (SQLException e) {
+			logger.error(new DaoException(e));
+		}
+
 		return friend;
 	}
 }

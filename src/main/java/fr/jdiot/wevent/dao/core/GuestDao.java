@@ -7,6 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import fr.jdiot.wevent.dao.common.ConnectionPool;
 import fr.jdiot.wevent.dao.contract.GuestContract;
 import fr.jdiot.wevent.dao.entity.Event;
@@ -17,6 +20,8 @@ import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
 
 public final class GuestDao extends CommonDao<Guest> {
+	
+	protected static final Logger logger = LogManager.getLogger();
 
 	public GuestDao(ConnectionPool connectionPool) {
 		super(connectionPool);
@@ -43,7 +48,7 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("Guest creation failed.");	    		
+	    		logger.error(new DaoException("Guest creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -51,11 +56,11 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	if(resultSet.next()) {
 	    		newGuest = resultSetToGuestEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("Guest creation failed.");
+	    		logger.error(new DaoException("Guest creation failed."));
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -83,7 +88,7 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connection);
 		}
@@ -91,7 +96,8 @@ public final class GuestDao extends CommonDao<Guest> {
 
 	@Override
 	public Guest update(Guest entity) {
-		throw new DaoException("Method not implemented.");
+		logger.error(new DaoException("Method not implemented."));
+		return null;
 	}
 
 	@Override
@@ -114,7 +120,7 @@ public final class GuestDao extends CommonDao<Guest> {
 			}
 			
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -132,19 +138,23 @@ public final class GuestDao extends CommonDao<Guest> {
 		return guests;
 	}
 	
-	private Guest resultSetToGuestEntity(ResultSet resultSet) throws SQLException {
+	private Guest resultSetToGuestEntity(ResultSet resultSet){
 		
 		UserDao userDao = new UserDao(this.connectionPool);
 		EventDao eventDao = new EventDao(this.connectionPool);
-		
-		User user = userDao.findById(resultSet.getString(GuestContract.COL_USER_ID_NAME));
-		Event event = eventDao.findById(resultSet.getString(GuestContract.COL_EVENT_ID_NAME));
-		
 		Guest guest = new Guest();
-		guest.setUser(user);
-		guest.setEvent(event);
-		guest.setCreatedAt(resultSet.getTimestamp(GuestContract.COL_CREATED_AT_NAME));
 		
+		try {
+			User user = userDao.findById(resultSet.getString(GuestContract.COL_USER_ID_NAME));
+			Event event = eventDao.findById(resultSet.getString(GuestContract.COL_EVENT_ID_NAME));
+			
+			guest.setUser(user);
+			guest.setEvent(event);
+			guest.setCreatedAt(resultSet.getTimestamp(GuestContract.COL_CREATED_AT_NAME));
+		} catch (SQLException e) {
+			logger.error(new DaoException(e));
+		}
+
 		return guest;
 	}
 

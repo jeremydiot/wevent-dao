@@ -4,14 +4,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import fr.jdiot.wevent.dao.util.UtilProperties;
 
 public final class ConnectionPool {
 	
-	private static final String DRIVER = "org.postgresql.Driver";
-	
-	private static final int MIN_IDLE = 5;
-	private static final int MAX_IDLE = 10;
-	private static final int MAX_STMT = 100;
+	protected static final Logger logger = LogManager.getLogger();
 	
 	private static BasicDataSource basicDataSourceSingleton = null;
 	
@@ -22,18 +22,24 @@ public final class ConnectionPool {
 	}
 	
 	public static ConnectionPool getInstance(String url, String user, String password) {
+		
+		logger.trace("url="+url+" user="+user+" password="+password);
+		
 		if (basicDataSourceSingleton == null) {
 			
 			basicDataSourceSingleton = new BasicDataSource();
-			basicDataSourceSingleton.setDriverClassName(DRIVER);
+			basicDataSourceSingleton.setDriverClassName(UtilProperties.getConfProperety("conf.jdbc.driver"));
 			basicDataSourceSingleton.setUrl(url);
 			basicDataSourceSingleton.setUsername(user);
 			basicDataSourceSingleton.setPassword(password);
 			
-			basicDataSourceSingleton.setMinIdle(MIN_IDLE);
-			basicDataSourceSingleton.setMaxIdle(MAX_IDLE);
-			basicDataSourceSingleton.setMaxOpenPreparedStatements(MAX_STMT);
+			basicDataSourceSingleton.setInitialSize(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.initialSize")));
+			basicDataSourceSingleton.setMaxTotal(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxTotal")));
+			basicDataSourceSingleton.setMaxIdle(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxIdle")));
+			basicDataSourceSingleton.setMinIdle(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.minIdle")));
+			basicDataSourceSingleton.setMaxOpenPreparedStatements(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxOpenPreparedStatements")));
 			
+			logger.info("sigleton created");
 		}
 		
 		ConnectionPool instance = new ConnectionPool(basicDataSourceSingleton);

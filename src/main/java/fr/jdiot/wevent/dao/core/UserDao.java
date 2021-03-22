@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 import fr.jdiot.wevent.dao.common.ConnectionPool;
@@ -15,9 +17,12 @@ import fr.jdiot.wevent.dao.entity.User;
 import fr.jdiot.wevent.dao.exception.DaoException;
 import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
+import fr.jdiot.wevent.dao.util.UtilProperties;
 
 public final class UserDao extends CommonDao<User> {
 
+	protected static final Logger logger = LogManager.getLogger();
+	
 	public UserDao(ConnectionPool connectionPool) {
 		super(connectionPool);
 		// TODO Auto-generated constructor stub
@@ -48,7 +53,7 @@ public final class UserDao extends CommonDao<User> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("User creation failed.");	    		
+	    		logger.error(new DaoException("User creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -56,17 +61,15 @@ public final class UserDao extends CommonDao<User> {
 	    	if(resultSet.next()) {
 	    		newUser = resultSetToUserEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("User creation failed.");
+	    		logger.error(new DaoException("User creation failed."));	
 	    	}
 	    	
-			
 		} catch (SQLException e) {
-			throw new DaoException(e);
+    		logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
 	    
-		
 		return newUser;
 	}
 
@@ -84,11 +87,13 @@ public final class UserDao extends CommonDao<User> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("User delete failed.");	    		
+	    		
+	    		logger.error(new DaoException("User delete failed."));	    		
 	    	}
 	    	
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connexion);
 		}
@@ -130,7 +135,7 @@ public final class UserDao extends CommonDao<User> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		throw new DaoException("User update failed.");	    		
+	    		logger.error( new DaoException("User update failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -138,12 +143,14 @@ public final class UserDao extends CommonDao<User> {
 	    	if(resultSet.next()) {
 	    		updatedUser = resultSetToUserEntity(resultSet);
 	    	}else {
-	    		throw new DaoException("User update failed.");
+	    		logger.error( new DaoException("User update failed."));
 	    	}
 	    	
 			
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			
+			logger.error(new DaoException(e));
+			
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -171,7 +178,7 @@ public final class UserDao extends CommonDao<User> {
 			}
 			
 		} catch (SQLException e) {
-			throw new DaoException(e);
+			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -194,22 +201,28 @@ public final class UserDao extends CommonDao<User> {
 		return users;
 	}
 	
-	private User resultSetToUserEntity(ResultSet resultSet) throws SQLException{
+	private User resultSetToUserEntity(ResultSet resultSet){
 		
 		User user = new User();
-		user.setId(resultSet.getString(UserContract.COL_ID_NAME));
-		user.setUsername(resultSet.getString(UserContract.COL_USERNAME_NAME));
-		user.setPassword(resultSet.getString(UserContract.COL_PASSWORD_NAME));
-		user.setEmail(resultSet.getString(UserContract.COL_EMAIL_NAME));
-		user.setConnectedAt(resultSet.getTimestamp(UserContract.COL_CONNECTED_AT_NAME));
-		user.setCreatedAt(resultSet.getTimestamp(UserContract.COL_CREATED_AT_NAME));
-		user.setModifiedAt(resultSet.getTimestamp(UserContract.COL_MODIFIED_AT_NAME));
+		
+		try {
+			user.setId(resultSet.getString(UserContract.COL_ID_NAME));
+			user.setUsername(resultSet.getString(UserContract.COL_USERNAME_NAME));
+			user.setPassword(resultSet.getString(UserContract.COL_PASSWORD_NAME));
+			user.setEmail(resultSet.getString(UserContract.COL_EMAIL_NAME));
+			user.setConnectedAt(resultSet.getTimestamp(UserContract.COL_CONNECTED_AT_NAME));
+			user.setCreatedAt(resultSet.getTimestamp(UserContract.COL_CREATED_AT_NAME));
+			user.setModifiedAt(resultSet.getTimestamp(UserContract.COL_MODIFIED_AT_NAME));
+		} catch (SQLException e) {
+			logger.error(new DaoException(e));
+		}
+		
 		return user;
 		
 	}
 	
 	private static String hashPassword(String password) {
-	    return BCrypt.hashpw(password, BCrypt.gensalt());
+	    return BCrypt.hashpw(password, BCrypt.gensalt(Integer.parseInt(UtilProperties.getConfProperety("conf.jbcrypt.saltComplexity"))));
 	}
 	
 	public static boolean checkPassword(String candidatePwd, String hashedPwd) {

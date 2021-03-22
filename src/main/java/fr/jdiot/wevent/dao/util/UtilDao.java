@@ -6,14 +6,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public final class UtilDao {
+	protected static final Logger logger = LogManager.getLogger();
+	
 	private UtilDao() {}
 	
 	public static PreparedStatement initPreparedStmt( Connection connexion, String sql, boolean returnGeneratedKeys, Object... objets ) throws SQLException {
+		
+		logger.trace(sql);
+		
 	    PreparedStatement preparedStatement = connexion.prepareStatement( sql, returnGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS );
 	    for ( int i = 0; i < objets.length; i++ ) {
 	        preparedStatement.setObject( i + 1, objets[i] );
 	    }
+	    
+	    logger.debug(preparedStatement.toString());
+	    
 	    return preparedStatement;
 	}
 
@@ -22,7 +33,9 @@ public final class UtilDao {
 	        try {
 	            resultSet.close();
 	        } catch ( SQLException e ) {
-	            System.err.println( "Failed to close ResultSet : " + e.getMessage() );
+	        	
+	        	logger.warn("Failed to close ResultSet : " + e.getMessage() );
+	        	
 	        }
 	    }
 	}
@@ -32,7 +45,7 @@ public final class UtilDao {
 	        try {
 	            statement.close();
 	        } catch ( SQLException e ) {
-	            System.err.println( "Failed to close Statement : " + e.getMessage() );
+	        	logger.warn("Failed to close Statement : " + e.getMessage() );
 	        }
 	    }
 	}
@@ -42,7 +55,7 @@ public final class UtilDao {
 	        try {
 	            connexion.close();
 	        } catch ( SQLException e ) {
-	            System.err.println( "Failed to close connexion : " + e.getMessage() );
+	        	logger.warn( "Failed to close connexion : " + e.getMessage() );
 	        }
 	    }
 	}
