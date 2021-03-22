@@ -23,7 +23,7 @@ public final class EventContract extends CommonContract {
 	public static final String COL_ID_CONSTRAINT = "PRIMARY KEY DEFAULT uuid_generate_v4() UNIQUE NOT NULL";
 	public static final String COL_ADMIN_ID_CONSTRAINT = "REFERENCES "+UserContract.TABLE_NAME+" ("+UserContract.COL_ID_NAME+") NOT NULL ON DELETE CASCADE";
 	public static final String COL_TITLE_CONSTRAINT = "NOT NULL";
-	public static final String COL_START_DATE_CONSTRAINT = "";
-	public static final String COL_END_DATE_CONSTRAINT = "";
-	public static final String COL_CONTENT_CONSTRAINT = "";
+	public static final String COL_START_DATE_CONSTRAINT = "CHECK ("+COL_START_DATE_NAME+" <= "+COL_END_DATE_NAME+") NOL NULL";
+	public static final String COL_END_DATE_CONSTRAINT = "CHECK ("+COL_END_DATE_NAME+" >= "+COL_START_DATE_NAME+") NOL NULL";
+	public static final String COL_CONTENT_CONSTRAINT = "NOT NULL";
 }
