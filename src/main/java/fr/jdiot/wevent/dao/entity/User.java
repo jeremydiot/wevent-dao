@@ -2,6 +2,9 @@ package fr.jdiot.wevent.dao.entity;
 
 import java.sql.Timestamp;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 public class User {
 
 	private String id;
@@ -65,6 +68,10 @@ public class User {
 	}
 	public void setModifiedAt(Timestamp modifiedAt) {
 		this.modifiedAt = modifiedAt;
+	}
+	
+	public String toString() {
+		return ReflectionToStringBuilder.toString(this,ToStringStyle.MULTI_LINE_STYLE);
 	}
 }
 
