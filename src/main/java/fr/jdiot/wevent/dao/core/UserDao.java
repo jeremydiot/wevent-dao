@@ -222,7 +222,7 @@ public final class UserDao extends CommonDao<User> {
 	}
 	
 	private static String hashPassword(String password) {
-	    return BCrypt.hashpw(password, BCrypt.gensalt(Integer.parseInt(UtilProperties.getConfProperety("conf.jbcrypt.saltComplexity"))));
+	    return BCrypt.hashpw(password, BCrypt.gensalt(Integer.parseInt(UtilProperties.getConfProperty("conf.jbcrypt.saltComplexity"))));
 	}
 	
 	public static boolean checkPassword(String candidatePwd, String hashedPwd) {

@@ -17,7 +17,7 @@ public final class ConnectionPool {
 	
 	private BasicDataSource basicDataSource;
 	
-	public ConnectionPool(BasicDataSource basicDataSourceArg) {
+	private ConnectionPool(BasicDataSource basicDataSourceArg) {
 		 this.basicDataSource = basicDataSourceArg;
 	}
 	
@@ -28,16 +28,16 @@ public final class ConnectionPool {
 		if (basicDataSourceSingleton == null) {
 			
 			basicDataSourceSingleton = new BasicDataSource();
-			basicDataSourceSingleton.setDriverClassName(UtilProperties.getConfProperety("conf.jdbc.driver"));
+			basicDataSourceSingleton.setDriverClassName(UtilProperties.getConfProperty("conf.jdbc.driver"));
 			basicDataSourceSingleton.setUrl(url);
 			basicDataSourceSingleton.setUsername(user);
 			basicDataSourceSingleton.setPassword(password);
 			
-			basicDataSourceSingleton.setInitialSize(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.initialSize")));
-			basicDataSourceSingleton.setMaxTotal(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxTotal")));
-			basicDataSourceSingleton.setMaxIdle(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxIdle")));
-			basicDataSourceSingleton.setMinIdle(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.minIdle")));
-			basicDataSourceSingleton.setMaxOpenPreparedStatements(Integer.parseInt(UtilProperties.getConfProperety("conf.bdcp2.maxOpenPreparedStatements")));
+			basicDataSourceSingleton.setInitialSize(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.initialSize")));
+			basicDataSourceSingleton.setMaxTotal(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxTotal")));
+			basicDataSourceSingleton.setMaxIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxIdle")));
+			basicDataSourceSingleton.setMinIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.minIdle")));
+			basicDataSourceSingleton.setMaxOpenPreparedStatements(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxOpenPreparedStatements")));
 			
 			logger.info("sigleton created");
 		}

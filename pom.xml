@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    	 
     <modelVersion>4.0.0</modelVersion>
  
     <groupId>fr.jdiot.wevent</groupId>
@@ -12,13 +14,12 @@
     <url>http://www.wevent.jdiot.fr</url>
  
      <!-- Licences -->
-    <licenses>
+     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+          <name>MIT License</name>
+          <url>http://www.opensource.org/licenses/mit-license.php</url>
         </license>
-    </licenses>
- 
+      </licenses>
  
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,6 +28,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
 
+		<!-- Dependencies -->
         <junit>5.8.0-M1</junit>
         <dbcp2>2.8.0</dbcp2>
         <jbcrypt>0.4</jbcrypt>
@@ -34,14 +36,21 @@
         <lang3>3.12.0</lang3>
         <mockito>3.8.0</mockito>
         
-        <!-- Plugin versions -->
-        <maven.shade>3.2.2</maven.shade>
-        <maven.clean>3.1.0</maven.clean>
-        <maven.resources>3.1.0</maven.resources>
+        <!-- Plugins -->
+        
         <maven.compiler>3.8.1</maven.compiler>
         <maven.surefire>3.0.0-M5</maven.surefire>
         <maven.jar>3.2.0</maven.jar>
-        <maven.install>3.0.0-M1</maven.install>
+        <maven.site>3.9.1</maven.site>
+        <jacoco>0.8.6</jacoco>
+        <maven.surefire-report>3.0.0-M5</maven.surefire-report>
+        <maven.project-info-report>3.1.1</maven.project-info-report>
+        
+        <!-- Jacoco -->
+		
+		<jacoco.exclude.common>fr/jdiot/wevent/dao/contract/*</jacoco.exclude.common>
+		<jacoco.minimum-coverage>0.90</jacoco.minimum-coverage>      
+        
     </properties>
     <dependencies>
     
@@ -95,7 +104,7 @@
 		<!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
 		<dependency>
 		    <groupId>org.mockito</groupId>
-		    <artifactId>mockito-core</artifactId>
+		    <artifactId>mockito-junit-jupiter</artifactId>
 		    <version>${mockito}</version>
 		    <scope>test</scope>
 		</dependency>
@@ -110,52 +119,36 @@
 	    </resources>
         <plugins>
             <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>3.1.0</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
-            </plugin>
-            <plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>${maven.compiler}</version>
             </plugin>
             <plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <configuration>
- <!--                	<forkCount>0</forkCount>
-                	<forkMode>never</forkMode> -->
-                </configuration>
+                <version>${maven.surefire}</version>
             </plugin>
             <plugin>
+            	<groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>${maven.jar}</version>
             </plugin>
-            <plugin>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>3.0.0-M1</version>
-            </plugin>
-            <plugin>
-          		<artifactId>maven-deploy-plugin</artifactId>
-          		<version>2.8.2</version>
-        	</plugin>
-        	<!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
 	        <plugin>
+	        	<groupId>org.apache.maven.plugins</groupId>
 	          	<artifactId>maven-site-plugin</artifactId>
-	          	<version>3.7.1</version>
-	        </plugin>
-	        <plugin>
-	          	<artifactId>maven-project-info-reports-plugin</artifactId>
-	          	<version>3.0.0</version>
+	          	<version>${maven.site}</version>
 	        </plugin>
 	        
 	        <!-- https://www.jacoco.org/jacoco/trunk/doc/maven.html -->
 	        <plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.6</version>
+				<version>${jacoco}</version>
+				<configuration>
+					<excludes>
+						<exclude>${jacoco.exclude.common}</exclude>
+					</excludes>
+				</configuration>	
 				<executions>
 					<execution>
 						<id>default-prepare-agent</id>
@@ -182,7 +175,7 @@
 										<limit>
 											<counter>COMPLEXITY</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.90</minimum>
+											<minimum>${jacoco.minimum-coverage}</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -193,25 +186,36 @@
 			</plugin>
         </plugins>
     </build>
-    <reporting>
+	<reporting>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-				<version>3.0.0-M5</version>
+				<version>${maven.surefire-report}</version>
 			</plugin>
 			<plugin>
-	        <groupId>org.jacoco</groupId>
-	        <artifactId>jacoco-maven-plugin</artifactId>
-	        <reportSets>
-	          <reportSet>
-	            <reports>
-	              <!-- select non-aggregate reports -->
-	              <report>report</report>
-	            </reports>
-	          </reportSet>
-	        </reportSets>
-	      </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-project-info-reports-plugin</artifactId>
+		        <version>${maven.project-info-report}</version>
+			</plugin>
+ 			<plugin>
+		        <groupId>org.jacoco</groupId>
+		        <artifactId>jacoco-maven-plugin</artifactId>
+		        <version>${jacoco}</version>
+		        <configuration>
+					<excludes>
+						<exclude>${jacoco.exclude.common}</exclude>
+					</excludes>
+				</configuration>
+		        <reportSets>
+		          <reportSet>
+		            <reports>
+		              <!-- select non-aggregate reports -->
+		              <report>report</report>
+		            </reports>
+		          </reportSet>
+		        </reportSets>
+		      </plugin>
 		</plugins>
 	</reporting>
 </project>

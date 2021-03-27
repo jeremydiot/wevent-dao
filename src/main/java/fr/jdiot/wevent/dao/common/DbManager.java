@@ -172,7 +172,7 @@ public DbManager(ConnectionPool connectionPoolArg) {
 		logger.debug(sqlQuery);
 		
 		try {
-			Class.forName(UtilProperties.getConfProperety("conf.jdbc.driver"));
+			Class.forName(UtilProperties.getConfProperty("conf.jdbc.driver"));
 			connection = DriverManager.getConnection(url, user, password) ;
 			statement = connection.createStatement();
 			statement.execute(sqlQuery);
