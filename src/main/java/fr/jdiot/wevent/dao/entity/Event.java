@@ -18,17 +18,6 @@ public class Event {
 	
 	public Event() {}
 	
-	public Event(String id, String title, String content, User admin, Timestamp startDate, Timestamp endDate, Timestamp createdAt, Timestamp modifiedAt) {
-		this.id = id;
-		this.title = title;
-		this.content = content;
-		this.admin = admin;
-		this.startDate = startDate;
-		this.endDate = endDate;
-		this.createdAt = createdAt;
-		this.modifiedAt = modifiedAt;
-	}
-	
 	public String getId() {
 		return id;
 	}

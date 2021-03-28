@@ -17,16 +17,6 @@ public class User {
 	
 	public User() {}
 	
-	public User(String id, String username, String password, String email, Timestamp connectedAt, Timestamp createdAt, Timestamp modifiedAt) {
-		this.id = id;
-		this.username = username;
-		this.password = password;
-		this.email = email;
-		this.connectedAt = connectedAt;
-		this.createdAt = createdAt;
-		this.modifiedAt = modifiedAt;
-	}
-	
 	public String getId() {
 		return id;
 	}

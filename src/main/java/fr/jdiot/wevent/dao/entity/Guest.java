@@ -13,12 +13,6 @@ public class Guest {
 	
 	public Guest() {}
 	
-	public Guest(User user, Event event, Timestamp createdAt) {
-		this.user = user;
-		this.event = event;
-		this.createdAt = createdAt;
-	}
-	
 	public User getUser() {
 		return user;
 	}

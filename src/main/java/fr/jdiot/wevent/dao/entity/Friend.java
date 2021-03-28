@@ -13,12 +13,6 @@ public class Friend {
 	
 	public Friend() {}
 	
-	public Friend(User user, User friend, Timestamp createdAt) {
-		this.user = user;
-		this.friend = friend;
-		this.createdAt = createdAt;
-	}
-	
 	public User getUser() {
 		return user;
 	}
