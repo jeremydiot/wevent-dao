@@ -81,7 +81,9 @@ class UtilDaoTest {
 	
 	@Test
 	void silentCloseTestNull() {
-		UtilDao.silentClose(null, null, null);
+		assertDoesNotThrow(() -> {
+			UtilDao.silentClose(null, null, null);
+		});
 	}
 	
 }

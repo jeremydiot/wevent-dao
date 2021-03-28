@@ -67,7 +67,7 @@ public final class UtilDao {
 
 	public static void silentClose( ResultSet resultSet, Statement statement, Connection connexion ) {
 		silentClose( resultSet );
-		silentClose(statement, connexion);
+		silentClose( statement, connexion );
 	}
 
 }
