@@ -49,7 +49,7 @@
         <!-- Jacoco -->
 		
 		<jacoco.exclude.common>fr/jdiot/wevent/dao/contract/*</jacoco.exclude.common>
-		<jacoco.minimum-coverage>0.90</jacoco.minimum-coverage>      
+		<jacoco.minimum-coverage>0.90</jacoco.minimum-coverage>   <!-- 90% -->   
         
     </properties>
     <dependencies>
