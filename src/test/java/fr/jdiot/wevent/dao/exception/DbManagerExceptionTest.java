@@ -4,12 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class DbManagerExceptionTest {
 
+	@Mock
+	static Throwable throwable;
 
 	@ParameterizedTest
 	@MethodSource("instanciateTestProvider")
@@ -42,7 +48,7 @@ public class DbManagerExceptionTest {
 
 					@Override
 					public void execute() throws Throwable {
-						throw new DbManagerException(new Throwable());
+						throw new DbManagerException(throwable);
 						
 					}
 	            	
@@ -51,7 +57,7 @@ public class DbManagerExceptionTest {
 
 					@Override
 					public void execute() throws Throwable {
-						throw new DbManagerException("test message",new Throwable());
+						throw new DbManagerException("test message",throwable);
 						
 					}
 	            	
@@ -60,7 +66,7 @@ public class DbManagerExceptionTest {
 
 					@Override
 					public void execute() throws Throwable {
-						throw new DbManagerException("test message",new Throwable(), true, true);
+						throw new DbManagerException("test message",throwable, true, true);
 						
 					}
 	            	
