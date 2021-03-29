@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,7 +57,7 @@ public final class EventDao extends CommonDao<Event> {
 	    	
 	    	if(status == 0) {
 	    		
-	    		logger.error(new DaoException("Event creation failed."));
+	    		throw logger.throwing(Level.ERROR,new DaoException("Event creation failed."));
 	    		
 	    	}
 	    	
@@ -96,7 +97,7 @@ public final class EventDao extends CommonDao<Event> {
 	    	
 	    	if(status == 0) {
 	    		
-	    		logger.error(new DaoException("Event delete failed."));
+	    		throw logger.throwing(Level.ERROR,new DaoException("Event delete failed."));
 	    		
 	    	}
 	    	
@@ -139,7 +140,7 @@ public final class EventDao extends CommonDao<Event> {
 	    	
 	    	if(status == 0) {
 	    		
-	    		logger.error(new DaoException("Event update failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("Event update failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -179,7 +180,7 @@ public final class EventDao extends CommonDao<Event> {
 	    	}
 	    	
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -230,7 +231,7 @@ public final class EventDao extends CommonDao<Event> {
 			event.setModifiedAt(resultSet.getTimestamp(EventContract.COL_MODIFIED_AT_NAME));
 			
 		}catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}
 		
 		return event;

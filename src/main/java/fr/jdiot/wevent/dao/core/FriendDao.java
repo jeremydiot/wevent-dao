@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,7 +48,7 @@ public final class FriendDao extends CommonDao<Friend> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		logger.error(new DaoException("Friend creation failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("Friend creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -83,7 +84,7 @@ public final class FriendDao extends CommonDao<Friend> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		logger.error(new DaoException("Friend delete failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("Friend delete failed."));	    		
 	    	}
 	    	
 		} catch (SQLException e) {
@@ -119,7 +120,7 @@ public final class FriendDao extends CommonDao<Friend> {
 			}
 			
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -148,7 +149,7 @@ public final class FriendDao extends CommonDao<Friend> {
 			friend.setCreatedAt(resultSet.getTimestamp(FriendContract.COL_CREATED_AT_NAME));
 			
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}
 
 		return friend;

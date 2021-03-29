@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
@@ -53,7 +54,7 @@ public final class UserDao extends CommonDao<User> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		logger.error(new DaoException("User creation failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("User creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -61,11 +62,11 @@ public final class UserDao extends CommonDao<User> {
 	    	if(resultSet.next()) {
 	    		newUser = resultSetToUserEntity(resultSet);
 	    	}else {
-	    		logger.error(new DaoException("User creation failed."));	
+	    		throw logger.throwing(Level.ERROR,new DaoException("User creation failed."));	
 	    	}
 	    	
 		} catch (SQLException e) {
-    		logger.error(new DaoException(e));
+    		throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -88,12 +89,12 @@ public final class UserDao extends CommonDao<User> {
 	    	
 	    	if(status == 0) {
 	    		
-	    		logger.error(new DaoException("User delete failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("User delete failed."));	    		
 	    	}
 	    	
 		} catch (SQLException e) {
 			
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connexion);
 		}
@@ -135,7 +136,7 @@ public final class UserDao extends CommonDao<User> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		logger.error( new DaoException("User update failed."));	    		
+	    		throw logger.throwing(Level.ERROR, new DaoException("User update failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -143,13 +144,13 @@ public final class UserDao extends CommonDao<User> {
 	    	if(resultSet.next()) {
 	    		updatedUser = resultSetToUserEntity(resultSet);
 	    	}else {
-	    		logger.error( new DaoException("User update failed."));
+	    		throw logger.throwing(Level.ERROR, new DaoException("User update failed."));
 	    	}
 	    	
 			
 		} catch (SQLException e) {
 			
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 			
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
@@ -178,7 +179,7 @@ public final class UserDao extends CommonDao<User> {
 			}
 			
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connexion);
 		}
@@ -214,7 +215,7 @@ public final class UserDao extends CommonDao<User> {
 			user.setCreatedAt(resultSet.getTimestamp(UserContract.COL_CREATED_AT_NAME));
 			user.setModifiedAt(resultSet.getTimestamp(UserContract.COL_MODIFIED_AT_NAME));
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}
 		
 		return user;

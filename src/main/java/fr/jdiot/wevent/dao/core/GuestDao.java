@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +49,7 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	int status = preparedStatement.executeUpdate();
 	    	
 	    	if(status == 0) {
-	    		logger.error(new DaoException("Guest creation failed."));	    		
+	    		throw logger.throwing(Level.ERROR,new DaoException("Guest creation failed."));	    		
 	    	}
 	    	
 	    	resultSet = preparedStatement.getGeneratedKeys();
@@ -56,11 +57,11 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	if(resultSet.next()) {
 	    		newGuest = resultSetToGuestEntity(resultSet);
 	    	}else {
-	    		logger.error(new DaoException("Guest creation failed."));
+	    		throw logger.throwing(Level.ERROR,new DaoException("Guest creation failed."));
 	    	}
 	    	
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -88,7 +89,7 @@ public final class GuestDao extends CommonDao<Guest> {
 	    	}
 	    	
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connection);
 		}
@@ -120,7 +121,7 @@ public final class GuestDao extends CommonDao<Guest> {
 			}
 			
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(resultSet, preparedStatement, connection);
 		}
@@ -152,7 +153,7 @@ public final class GuestDao extends CommonDao<Guest> {
 			guest.setEvent(event);
 			guest.setCreatedAt(resultSet.getTimestamp(GuestContract.COL_CREATED_AT_NAME));
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}
 
 		return guest;
