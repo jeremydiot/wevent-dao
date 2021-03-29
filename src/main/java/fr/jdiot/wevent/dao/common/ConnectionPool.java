@@ -21,7 +21,9 @@ public class ConnectionPool {
 		 this.basicDataSource = basicDataSourceArg;
 	}
 	
-	public static ConnectionPool getInstance(String url, String user, String password) {
+	public static ConnectionPool getInstance(String host, String port, String database, String user, String password) {
+		
+		String url = "jdbc:postgresql://"+host+":"+port+"/"+database;
 		
 		logger.trace("url="+url+" user="+user+" password="+password);
 		

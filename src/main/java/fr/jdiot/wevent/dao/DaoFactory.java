@@ -15,17 +15,8 @@ public final class DaoFactory {
 		this.connectionPool = connectionPoolArg;
 	}
 
-	public static DaoFactory getInstance(String url, String user, String password) {
-		ConnectionPool connectionPool = ConnectionPool.getInstance(url, user, password);
-		return new DaoFactory(connectionPool);
-	}
-	
-	public ConnectionPool getConnectionPool() {
-		return this.connectionPool;
-	}
-	
-	public DbManager getDbManager() {
-		return new DbManager(connectionPool);
+	public static DaoFactory getInstance(String host, String port, String database, String user, String password) {
+		return new DaoFactory(ConnectionPool.getInstance(host ,port, database, user, password));
 	}
 	
 	public EventDao getEventDao() {

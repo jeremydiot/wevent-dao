@@ -35,6 +35,7 @@
         <log4j>2.14.1</log4j>
         <lang3>3.12.0</lang3>
         <mockito>3.8.0</mockito>
+        <postgresql>42.2.19</postgresql>
         
         <!-- Plugins -->
         
@@ -113,7 +114,7 @@
 		<dependency>
 		    <groupId>org.postgresql</groupId>
 		    <artifactId>postgresql</artifactId>
-		    <version>42.2.19</version>
+		    <version>${postgresql}</version>
 		</dependency>
 		
 		

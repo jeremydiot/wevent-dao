@@ -9,8 +9,8 @@ public final class SqlPattern {
 	
 	public static final String CREATE_EXTENSION = "CREATE EXTENSION IF NOT EXISTS '%s'";
 	
-	public static final String CREATE_TABLE = "CREATE TABLE %s (%s)";
-	public static final String DROP_TABLE = "DROP TABLE %s";
+	public static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS %s (%s)";
+	public static final String DROP_TABLE = "DROP TABLE IF EXISTS %s";
 	
 	public static final String UPDATE = "UPDATE %s SET %s WHERE %";
 	public static final String INSERT = "INSERT INTO %s (%s) VALUES (%s)";

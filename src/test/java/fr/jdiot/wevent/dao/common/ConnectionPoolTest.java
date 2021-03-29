@@ -16,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ConnectionPoolTest {
 
-	static String url = "jdbc:postgresql://127.0.0.1:5432/wevent";
+	static String host = "wrongHost";
+	static String port = "5432";
+	static String database = "wevent";
 	static String user = "root";
 	static String password = "root";
 	
@@ -32,8 +34,8 @@ class ConnectionPoolTest {
 	@Test
 	void getInstanceTest() {
 		
-		ConnectionPool connectionPoolTest1 =  ConnectionPool.getInstance(url, user, password);
-		ConnectionPool connectionPoolTest2 =  ConnectionPool.getInstance(url, user, password);
+		ConnectionPool connectionPoolTest1 =  ConnectionPool.getInstance(host ,port, database, user, password);
+		ConnectionPool connectionPoolTest2 =  ConnectionPool.getInstance(host ,port, database, user, password);
 		
 		assertEquals(connectionPoolTest1, connectionPoolTest2);
 	}
@@ -51,8 +53,8 @@ class ConnectionPoolTest {
 	
 	@Test
 	void getBasicDataSourceTest() {
-		BasicDataSource basicDataSourceTest1 = ConnectionPool.getInstance(url, user, password).getBasicDataSource();
-		BasicDataSource basicDataSourceTest2 = ConnectionPool.getInstance(url, user, password).getBasicDataSource();
+		BasicDataSource basicDataSourceTest1 = ConnectionPool.getInstance(host ,port, database, user, password).getBasicDataSource();
+		BasicDataSource basicDataSourceTest2 = ConnectionPool.getInstance(host ,port, database, user, password).getBasicDataSource();
 		
 		assertEquals(basicDataSourceTest1, basicDataSourceTest2);
 	}

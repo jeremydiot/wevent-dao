@@ -2,14 +2,12 @@ package fr.jdiot.wevent.dao.common;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.postgresql.util.PSQLException;
 
 import fr.jdiot.wevent.dao.contract.DatabaseContract;
 import fr.jdiot.wevent.dao.contract.EventContract;
@@ -18,10 +16,9 @@ import fr.jdiot.wevent.dao.contract.GuestContract;
 import fr.jdiot.wevent.dao.contract.UserContract;
 import fr.jdiot.wevent.dao.exception.DbManagerException;
 import fr.jdiot.wevent.dao.util.SqlPattern;
-import fr.jdiot.wevent.dao.util.UtilDao;
 import fr.jdiot.wevent.dao.util.UtilProperties;
 
-public final class DbManager {
+public class DbManager {
 
 	public static final String CREATE_EXTENSION_UUID_OSSP = String.format(SqlPattern.CREATE_EXTENSION, DatabaseContract.DATABASE_UUID_OSSP_EXTENSION_NAME);
 	
@@ -30,13 +27,29 @@ public final class DbManager {
 	
 	protected static final Logger logger = LogManager.getLogger();
 	
-	private ConnectionPool connectionPool;
+	private String jdbcUrl;
+	private String jdbcUser;
+	private String jdbcPassword;
 	
-	public DbManager(ConnectionPool connectionPoolArg) {
-		connectionPool = connectionPoolArg;
+	public DbManager(String host, String port, String database, String user, String password) {
+		
+		jdbcUrl = "jdbc:postgresql://"+host+":"+port+"/"+database;
+		jdbcUser = user;
+		jdbcPassword = password;
+		
 	}
 	
-	public void upConf() {
+	public void createDatabase() {
+		
+		executeSqlQuery(CREATE_DATABASE);
+	}
+	
+	public void dropDatabase() {
+		
+		executeSqlQuery(DROP_DATABASE);
+	}
+	
+	public void createTables() {
 		executeSqlQuery(CREATE_EXTENSION_UUID_OSSP);
 		createUserTable();
 		createEventTable();
@@ -44,12 +57,7 @@ public final class DbManager {
 		createFriendTable();
 	}
 	
-	public void resetConf() {
-		downConf();
-		upConf();
-	}
-	
-	public void downConf() {
+	public void dropTables() {
 		
 		String sqlQuery = String.format(SqlPattern.DROP_TABLE, 
 				  FriendContract.TABLE_NAME+","
@@ -113,8 +121,10 @@ public final class DbManager {
 		
 		executeSqlQuery(sqlQuery);
 	}
+	
 
-	private void executeSqlQuery(String sqlQuery) {
+
+	public void executeSqlQuery(String sqlQuery) {
 		
 		logger.trace(sqlQuery);
 		
@@ -122,58 +132,19 @@ public final class DbManager {
 		Statement statement= null;
 		
 		try {
-			connection = this.connectionPool.getConnection();
+			Class.forName(UtilProperties.getConfProperty("conf.jdbc.driver"));
+			connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword) ;
 			statement = connection.createStatement();
 			statement.execute(sqlQuery);
 			
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			throw logger.throwing(Level.ERROR,new DbManagerException(e));
 			
 		}finally {
 			try {
 				statement.close();
 				connection.close();
-			} catch (SQLException e) {
-				logger.warn(e);
-			}
-		}	
-	}
-
-	public static void createDatabase(String url,String user,String password) {
-		
-		logger.trace("url="+url+" user="+user+" password="+password);
-		
-		executeSqlQuery(url, user, password, CREATE_DATABASE);
-	}
-	
-	public static void dropDatabase(String url,String user,String password) {
-		
-		logger.trace("url="+url+" user="+user+" password="+password);
-		
-		executeSqlQuery(url, user, password, DROP_DATABASE);
-	}
-	
-	private static void executeSqlQuery(String url,String user,String password,String sqlQuery) {
-		Connection connection = null;
-		Statement statement= null;
-		
-		logger.trace(sqlQuery);
-		
-		try {
-			Class.forName("org.postgresql.Driver");
-			connection = DriverManager.getConnection(url, user, password) ;
-			statement = connection.createStatement();
-			statement.execute(sqlQuery);
-			
-		} catch (ClassNotFoundException | SQLException e) {
-			
-			throw logger.throwing(Level.ERROR,new DbManagerException(e));
-			
-		}finally {
-			try {
-				statement.close();
-				connection.close();
-			} catch (SQLException e) {
+			} catch (NullPointerException | SQLException e) {
 				logger.warn(e);
 			}
 		}	
