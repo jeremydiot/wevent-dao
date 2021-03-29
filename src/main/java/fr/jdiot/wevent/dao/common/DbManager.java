@@ -6,8 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.postgresql.util.PSQLException;
 
 import fr.jdiot.wevent.dao.contract.DatabaseContract;
 import fr.jdiot.wevent.dao.contract.EventContract;
@@ -30,7 +32,7 @@ public final class DbManager {
 	
 	private ConnectionPool connectionPool;
 	
-public DbManager(ConnectionPool connectionPoolArg) {
+	public DbManager(ConnectionPool connectionPoolArg) {
 		connectionPool = connectionPoolArg;
 	}
 	
@@ -48,28 +50,14 @@ public DbManager(ConnectionPool connectionPoolArg) {
 	}
 	
 	public void downConf() {
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
 		
-		String sqlReq = String.format(SqlPattern.DROP_TABLE, 
+		String sqlQuery = String.format(SqlPattern.DROP_TABLE, 
 				  FriendContract.TABLE_NAME+","
 				+ GuestContract.TABLE_NAME+","
 				+ EventContract.TABLE_NAME+","
 				+ UserContract.TABLE_NAME);
 		
-		try {
-			connection = this.connectionPool.getConnection();
-			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false);
-			preparedStatement.execute();
-			
-			
-		} catch (SQLException e) {
-			
-			logger.error(new DbManagerException(e));
-			
-		}finally {
-			UtilDao.silentClose(preparedStatement, connection);
-		}
+		executeSqlQuery(sqlQuery);
 	}
 	
 	private void createEventTable() {
@@ -139,7 +127,7 @@ public DbManager(ConnectionPool connectionPoolArg) {
 			statement.execute(sqlQuery);
 			
 		} catch (SQLException e) {
-			logger.error(new DbManagerException(e));
+			throw logger.throwing(Level.ERROR,new DbManagerException(e));
 			
 		}finally {
 			try {
@@ -169,17 +157,17 @@ public DbManager(ConnectionPool connectionPoolArg) {
 		Connection connection = null;
 		Statement statement= null;
 		
-		logger.debug(sqlQuery);
+		logger.trace(sqlQuery);
 		
 		try {
-			Class.forName(UtilProperties.getConfProperty("conf.jdbc.driver"));
+			Class.forName("org.postgresql.Driver");
 			connection = DriverManager.getConnection(url, user, password) ;
 			statement = connection.createStatement();
 			statement.execute(sqlQuery);
 			
 		} catch (ClassNotFoundException | SQLException e) {
 			
-			logger.error(new DbManagerException(e));
+			throw logger.throwing(Level.ERROR,new DbManagerException(e));
 			
 		}finally {
 			try {
