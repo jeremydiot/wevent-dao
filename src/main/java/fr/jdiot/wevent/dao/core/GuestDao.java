@@ -17,10 +17,11 @@ import fr.jdiot.wevent.dao.entity.Event;
 import fr.jdiot.wevent.dao.entity.Guest;
 import fr.jdiot.wevent.dao.entity.User;
 import fr.jdiot.wevent.dao.exception.DaoException;
+import fr.jdiot.wevent.dao.util.ResultSetToEntity;
 import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
 
-public final class GuestDao extends CommonDao<Guest> {
+public final class GuestDao extends CommonDao<Guest> implements ResultSetToEntity<Guest> {
 	
 	protected static final Logger logger = LogManager.getLogger();
 
@@ -32,8 +33,7 @@ public final class GuestDao extends CommonDao<Guest> {
 	public Guest create(Guest entity) {
 		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    Guest newGuest = null;
+	    List<Guest> updatedGuests = new ArrayList<Guest>();
 		
 	    String sqlReq = String.format(SqlPattern.INSERT, GuestContract.TABLE_NAME,
 	    		GuestContract.COL_USER_ID_NAME+","
@@ -42,57 +42,53 @@ public final class GuestDao extends CommonDao<Guest> {
 		
 	    try {
 	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, true, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, 
 	    			entity.getUser().getId(),
 	    			entity.getEvent().getId());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedGuests = UtilDao.executeCreate(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		throw logger.throwing(Level.ERROR,new DaoException("Guest creation failed."));	    		
-	    	}
-	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		newGuest = resultSetToGuestEntity(resultSet);
-	    	}else {
-	    		throw logger.throwing(Level.ERROR,new DaoException("Guest creation failed."));
-	    	}
-	    	
-		} catch (SQLException e) {
-			throw logger.throwing(Level.ERROR,new DaoException(e));
-		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connection);
-		}
-	    
-		return newGuest;
-	}
-
-	@Override
-	public void delete(Guest entity) {
-		Connection connection = null;
-	    PreparedStatement preparedStatement = null;
-		
-	    String sqlReq = String.format(SqlPattern.DELETE, GuestContract.TABLE_NAME,
-	    		GuestContract.COL_USER_ID_NAME+" = ? AND "+GuestContract.COL_EVENT_ID_NAME+" = ?");
-		
-	    try {
-	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false, 
-	    			entity.getUser().getId(), entity.getEvent().getId());
-	    	
-	    	int status = preparedStatement.executeUpdate();
-	    	
-	    	if(status == 0) {
-	    		throw new DaoException("Guest delete failed.");	    		
-	    	}
+			if(updatedGuests.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connection);
 		}
+	    
+		return updatedGuests.get(0);
+	}
+
+	@Override
+	public Guest delete(Guest entity) {
+		Connection connection = null;
+	    PreparedStatement preparedStatement = null;
+	    List<Guest> updatedGuests = new ArrayList<Guest>();
+	    
+	    
+	    String sqlReq = String.format(SqlPattern.DELETE, GuestContract.TABLE_NAME,
+	    		GuestContract.COL_USER_ID_NAME+" = ? AND "+GuestContract.COL_EVENT_ID_NAME+" = ?");
+		
+	    try {
+	    	connection = this.connectionPool.getConnection();
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, 
+	    			entity.getUser().getId(), entity.getEvent().getId());
+	    	
+	    	updatedGuests = UtilDao.executeDelete(preparedStatement, this);
+	    	
+			if(updatedGuests.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
+	    		    	
+		} catch (SQLException e) {
+			throw logger.throwing(Level.ERROR,new DaoException(e));
+		}finally {
+			UtilDao.silentClose(preparedStatement, connection);
+		}
+	    
+		return updatedGuests.get(0);
 	}
 
 	@Override
@@ -102,60 +98,52 @@ public final class GuestDao extends CommonDao<Guest> {
 	}
 
 	@Override
-	protected List<Guest> find(String columnName, String operator, Object value) {
+	protected List<Guest> read(String columnName, String operator, Object value) {
 		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    List<Guest> friends = new ArrayList<Guest>();
+	    List<Guest> guests = new ArrayList<Guest>();
 		
 	    String sqlReq = String.format(SqlPattern.SELECT,"*",GuestContract.TABLE_NAME, columnName+" "+operator+" ?");
 		
 	    try {
 	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false, value);
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, value);
 	    	
-	    	resultSet = preparedStatement.executeQuery();
-	    	
-	    	while (resultSet.next()) {
-	    		friends.add(resultSetToGuestEntity(resultSet));
-			}
+	    	guests = UtilDao.executeRead(preparedStatement, this);
 			
 		} catch (SQLException e) {
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connection);
+			UtilDao.silentClose(preparedStatement, connection);
 		}
 		
-		return friends;
+		return guests;
 	}
 	
 	public List<Guest> findByEvent(Event event) {
-		List<Guest> guests = find(GuestContract.COL_EVENT_ID_NAME, "=", event.getId());
+		List<Guest> guests = read(GuestContract.COL_EVENT_ID_NAME, "=", event.getId());
 		return guests;
 	}
 	
 	public List<Guest> findByUser(User user) {
-		List<Guest> guests = find(GuestContract.COL_USER_ID_NAME, "=", user.getId());
+		List<Guest> guests = read(GuestContract.COL_USER_ID_NAME, "=", user.getId());
 		return guests;
 	}
 	
-	private Guest resultSetToGuestEntity(ResultSet resultSet){
+	@Override
+	public Guest convert(ResultSet resultSet) throws SQLException {
 		
 		UserDao userDao = new UserDao(this.connectionPool);
 		EventDao eventDao = new EventDao(this.connectionPool);
 		Guest guest = new Guest();
 		
-		try {
-			User user = userDao.findById(resultSet.getString(GuestContract.COL_USER_ID_NAME));
-			Event event = eventDao.findById(resultSet.getString(GuestContract.COL_EVENT_ID_NAME));
-			
-			guest.setUser(user);
-			guest.setEvent(event);
-			guest.setCreatedAt(resultSet.getTimestamp(GuestContract.COL_CREATED_AT_NAME));
-		} catch (SQLException e) {
-			throw logger.throwing(Level.ERROR,new DaoException(e));
-		}
-
+		User user = userDao.findById(resultSet.getString(GuestContract.COL_USER_ID_NAME));
+		Event event = eventDao.findById(resultSet.getString(GuestContract.COL_EVENT_ID_NAME));
+		
+		guest.setUser(user);
+		guest.setEvent(event);
+		guest.setCreatedAt(resultSet.getTimestamp(GuestContract.COL_CREATED_AT_NAME));
+		
 		return guest;
 	}
 

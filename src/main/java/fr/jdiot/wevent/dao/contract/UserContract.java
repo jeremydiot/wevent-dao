@@ -4,7 +4,7 @@ public final class UserContract extends CommonContract {
 	
 	private UserContract() {}
 	
-	public static final String TABLE_NAME = "user";
+	public static final String TABLE_NAME = "t_user";
 	
 	public static final String COL_ID_NAME = "id";
 	public static final String COL_USERNAME_NAME = "username";

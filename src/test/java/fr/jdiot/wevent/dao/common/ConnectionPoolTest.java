@@ -16,12 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ConnectionPoolTest {
 
-	static String host = "wrongHost";
-	static String port = "5432";
-	static String database = "wevent";
-	static String user = "root";
-	static String password = "root";
-	
+	static String DB_HOST = "dbhost";
+	static String DB_PORT = "5432";
+	static String DB_NAME = "wevent";
+	static String DB_USER = "dbuser";
+	static String DB_PSSWD = "dbpsswd";
+
 	@Mock
 	BasicDataSource basicDataSource;
 	
@@ -32,15 +32,6 @@ class ConnectionPoolTest {
 	Connection connection;
 	
 	@Test
-	void getInstanceTest() {
-		
-		ConnectionPool connectionPoolTest1 =  ConnectionPool.getInstance(host ,port, database, user, password);
-		ConnectionPool connectionPoolTest2 =  ConnectionPool.getInstance(host ,port, database, user, password);
-		
-		assertEquals(connectionPoolTest1, connectionPoolTest2);
-	}
-	
-	@Test
 	void getConnectionTest() throws SQLException {
 		
 		Mockito.when(basicDataSource.getConnection()).thenReturn(connection);
@@ -49,14 +40,6 @@ class ConnectionPoolTest {
 		
 		Mockito.verify(basicDataSource, Mockito.times(1)).getConnection();
 		assertEquals(connection, connectionTest);
-	}
-	
-	@Test
-	void getBasicDataSourceTest() {
-		BasicDataSource basicDataSourceTest1 = ConnectionPool.getInstance(host ,port, database, user, password).getBasicDataSource();
-		BasicDataSource basicDataSourceTest2 = ConnectionPool.getInstance(host ,port, database, user, password).getBasicDataSource();
-		
-		assertEquals(basicDataSourceTest1, basicDataSourceTest2);
 	}
 	
 	@Test

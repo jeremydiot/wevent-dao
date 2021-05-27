@@ -13,6 +13,7 @@ import fr.jdiot.wevent.dao.exception.UtilPropertiesException;
 public final class UtilProperties {
 
 	private static final String CONF_PROPERTIES_FILE_PATH="conf.properties";
+	private static final String TEST_PROPERTIES_FILE_PATH="test.properties";
 	
 	protected static final Logger logger = LogManager.getLogger();
 	
@@ -20,6 +21,10 @@ public final class UtilProperties {
 	
 	public static String getConfProperty(String propertyName) {
 		return getPropertyFromFile(CONF_PROPERTIES_FILE_PATH, propertyName);
+	}
+	
+	public static String getTestProperty(String propertyName) {
+		return getPropertyFromFile(TEST_PROPERTIES_FILE_PATH, propertyName);
 	}
 
 	public static String getPropertyFromFile(String propertiesFilePath, String propertyName) {
@@ -31,7 +36,7 @@ public final class UtilProperties {
 		String propertyValue = null;
 		
 		try {
-			inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(CONF_PROPERTIES_FILE_PATH);
+			inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFilePath);
 			properties.load(inputStream);
 			propertyValue = properties.getProperty(propertyName);			
 		} catch ( IOException | NullPointerException e) {

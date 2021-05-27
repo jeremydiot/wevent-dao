@@ -16,10 +16,11 @@ import fr.jdiot.wevent.dao.contract.FriendContract;
 import fr.jdiot.wevent.dao.entity.Friend;
 import fr.jdiot.wevent.dao.entity.User;
 import fr.jdiot.wevent.dao.exception.DaoException;
+import fr.jdiot.wevent.dao.util.ResultSetToEntity;
 import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
 
-public final class FriendDao extends CommonDao<Friend> {
+public final class FriendDao extends CommonDao<Friend> implements ResultSetToEntity<Friend> {
 
 	protected static final Logger logger = LogManager.getLogger();
 	
@@ -31,8 +32,7 @@ public final class FriendDao extends CommonDao<Friend> {
 	public Friend create(Friend entity) {
 		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    Friend newFriend = null;
+	    List<Friend> updatedFriends = new ArrayList<Friend>();
 		
 	    String sqlReq = String.format(SqlPattern.INSERT, FriendContract.TABLE_NAME,
 	    		  FriendContract.COL_USER_ID_NAME+","
@@ -41,57 +41,51 @@ public final class FriendDao extends CommonDao<Friend> {
 		
 	    try {
 	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, true, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, 
 	    			entity.getUser().getId(),
 	    			entity.getFriend().getId());
+	    
+	    	updatedFriends = UtilDao.executeCreate(preparedStatement, this);
 	    	
-	    	int status = preparedStatement.executeUpdate();
+			if(updatedFriends.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
-	    	if(status == 0) {
-	    		throw logger.throwing(Level.ERROR,new DaoException("Friend creation failed."));	    		
-	    	}
-	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		newFriend = resultSetToFriendEntity(resultSet);
-	    	}else {
-	    		logger.error(new DaoException("Friend creation failed."));
-	    	}
-	    	
-		} catch (SQLException e) {
+	    } catch (SQLException e) {
 			logger.error(new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connection);
+			UtilDao.silentClose(preparedStatement, connection);
 		}
 	    
-		return newFriend;
+		return updatedFriends.get(0);
 	}
 
 	@Override
-	public void delete(Friend entity) {
+	public Friend delete(Friend entity) {
 		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
+	    List<Friend> updatedFriends = new ArrayList<Friend>();
 		
 	    String sqlReq = String.format(SqlPattern.DELETE, FriendContract.TABLE_NAME, 
 	    		FriendContract.COL_USER_ID_NAME+" = ? AND "+FriendContract.COL_FRIEND_ID_NAME+" = ?");
 		
 	    try {
 	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, 
 	    			entity.getUser().getId(), entity.getFriend().getId());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedFriends = UtilDao.executeDelete(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		throw logger.throwing(Level.ERROR,new DaoException("Friend delete failed."));	    		
-	    	}
+			if(updatedFriends.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
 			logger.error(new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connection);
 		}
+		return updatedFriends.get(0);
 	}
 
 	@Override
@@ -101,57 +95,45 @@ public final class FriendDao extends CommonDao<Friend> {
 	}
 	
 	@Override
-	protected List<Friend> find(String columnName, String operator, Object value) {
+	protected List<Friend> read(String columnName, String operator, Object value) {
 		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
 	    List<Friend> friends = new ArrayList<Friend>();
 		
 	    String sqlReq = String.format(SqlPattern.SELECT,"*",FriendContract.TABLE_NAME, columnName+" "+operator+" ?");
 		
 	    try {
 	    	connection = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, false, value);
+	    	preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, value);
 	    	
-	    	resultSet = preparedStatement.executeQuery();
-	    	
-	    	while (resultSet.next()) {
-	    		friends.add(resultSetToFriendEntity(resultSet));
-			}
+	    	friends = UtilDao.executeRead(preparedStatement, this);
 			
 		} catch (SQLException e) {
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connection);
+			UtilDao.silentClose(preparedStatement, connection);
 		}
 		
 		return friends;
 	}
 	
 	public List<Friend> findByUser(User user) {
-		List<Friend> friends = find(FriendContract.COL_USER_ID_NAME, "=", user.getId());
+		List<Friend> friends = read(FriendContract.COL_USER_ID_NAME, "=", user.getId());
 		return friends;
 	}
-	
-	private Friend resultSetToFriendEntity(ResultSet resultSet) {
-		
+
+	@Override
+	public Friend convert(ResultSet resultSet) throws SQLException {
 		UserDao userDao = new UserDao(this.connectionPool);
 		Friend friend = new Friend();
 		
-		try {
-			
-			User user = userDao.findById(resultSet.getString(FriendContract.COL_USER_ID_NAME));
-			User friendUser = userDao.findById(resultSet.getString(FriendContract.COL_FRIEND_ID_NAME));
-			
-			
-			friend.setUser(user);
-			friend.setFriend(friendUser);
-			friend.setCreatedAt(resultSet.getTimestamp(FriendContract.COL_CREATED_AT_NAME));
-			
-		} catch (SQLException e) {
-			throw logger.throwing(Level.ERROR,new DaoException(e));
-		}
-
+		User user = userDao.findById(resultSet.getString(FriendContract.COL_USER_ID_NAME));
+		User friendUser = userDao.findById(resultSet.getString(FriendContract.COL_FRIEND_ID_NAME));
+		
+		friend.setUser(user);
+		friend.setFriend(friendUser);
+		friend.setCreatedAt(resultSet.getTimestamp(FriendContract.COL_CREATED_AT_NAME));
+		
 		return friend;
 	}
 }

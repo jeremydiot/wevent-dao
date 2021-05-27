@@ -21,40 +21,37 @@ public class ConnectionPool {
 		 this.basicDataSource = basicDataSourceArg;
 	}
 	
-	public static ConnectionPool getInstance(String host, String port, String database, String user, String password) {
+	public static ConnectionPool init(String host, String port, String database, String user, String password) {
 		
 		String url = "jdbc:postgresql://"+host+":"+port+"/"+database;
 		
 		logger.trace("url="+url+" user="+user+" password="+password);
 		
-		if (connectionPoolSingleton == null) {
-			
-			BasicDataSource basicDataSourceSingleton = new BasicDataSource();
-			basicDataSourceSingleton.setDriverClassName(UtilProperties.getConfProperty("conf.jdbc.driver"));
-			basicDataSourceSingleton.setUrl(url);
-			basicDataSourceSingleton.setUsername(user);
-			basicDataSourceSingleton.setPassword(password);
-			
-			basicDataSourceSingleton.setInitialSize(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.initialSize")));
-			basicDataSourceSingleton.setMaxTotal(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxTotal")));
-			basicDataSourceSingleton.setMaxIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxIdle")));
-			basicDataSourceSingleton.setMinIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.minIdle")));
-			basicDataSourceSingleton.setMaxOpenPreparedStatements(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxOpenPreparedStatements")));
-			
-			connectionPoolSingleton = new ConnectionPool(basicDataSourceSingleton); 
-			
-			logger.info("singleton created");
-		}
+		BasicDataSource basicDataSourceSingleton = new BasicDataSource();
+		basicDataSourceSingleton.setDriverClassName(UtilProperties.getConfProperty("conf.jdbc.driver"));
+		basicDataSourceSingleton.setUrl(url);
+		basicDataSourceSingleton.setUsername(user);
+		basicDataSourceSingleton.setPassword(password);
 		
+		basicDataSourceSingleton.setInitialSize(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.initialSize")));
+		basicDataSourceSingleton.setMaxTotal(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxTotal")));
+		basicDataSourceSingleton.setMaxIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxIdle")));
+		basicDataSourceSingleton.setMinIdle(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.minIdle")));
+		basicDataSourceSingleton.setMaxOpenPreparedStatements(Integer.parseInt(UtilProperties.getConfProperty("conf.bdcp2.maxOpenPreparedStatements")));
+		
+		connectionPoolSingleton = new ConnectionPool(basicDataSourceSingleton); 
+		
+		logger.info("singleton created");
+		
+		return ConnectionPool.getInstance();
+	}
+	
+	public static ConnectionPool getInstance() {
 		return connectionPoolSingleton;
 	}
 	
 	public Connection getConnection() throws SQLException {
 		return this.basicDataSource.getConnection();
-	}
-	
-	public BasicDataSource getBasicDataSource() {
-		return this.basicDataSource;
 	}
 	
 	public int getNumActiveConnection() {

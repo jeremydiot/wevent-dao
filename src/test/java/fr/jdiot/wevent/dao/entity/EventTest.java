@@ -71,8 +71,8 @@ public class EventTest {
 	
 	@Test
 	void modifiedAtTest() {
-		event.setModifiedAt(timestamp);
-		assertEquals(event.getModifiedAt(), timestamp);
+		event.setUpdatedAt(timestamp);
+		assertEquals(event.getUpdatedAt(), timestamp);
 	}
 	
 	@Test

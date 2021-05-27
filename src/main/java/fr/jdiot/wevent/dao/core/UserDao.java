@@ -10,31 +10,29 @@ import java.util.List;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mindrot.jbcrypt.BCrypt;
 
 import fr.jdiot.wevent.dao.common.ConnectionPool;
 import fr.jdiot.wevent.dao.contract.UserContract;
 import fr.jdiot.wevent.dao.entity.User;
 import fr.jdiot.wevent.dao.exception.DaoException;
+import fr.jdiot.wevent.dao.util.ResultSetToEntity;
 import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
-import fr.jdiot.wevent.dao.util.UtilProperties;
 
-public final class UserDao extends CommonDao<User> {
+public final class UserDao extends CommonDao<User> implements ResultSetToEntity<User>{
 
 	protected static final Logger logger = LogManager.getLogger();
 	
+	
 	public UserDao(ConnectionPool connectionPool) {
 		super(connectionPool);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public User create(User entity) {
-		Connection connexion = null;
+		Connection connection = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    User newUser = null;
+	    List<User> updatedUsers = new ArrayList<User>();
 		
 	    String sqlReq = String.format(SqlPattern.INSERT, UserContract.TABLE_NAME,
 	    		  UserContract.COL_USERNAME_NAME+","
@@ -42,70 +40,62 @@ public final class UserDao extends CommonDao<User> {
 	    		+ UserContract.COL_EMAIL_NAME+","
 	    		+ UserContract.COL_CONNECTED_AT_NAME
 	    		, "?,?,?,?");
-		
+	    
 	    try {
-	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
-	    			entity.getUsername(),
-	    			hashPassword(entity.getPassword()),
+			connection = connectionPool.getConnection();
+			preparedStatement = UtilDao.initPreparedStmt(connection, sqlReq, 
+					entity.getUsername(),
+					UtilDao.hashPassword(entity.getPassword()),
 	    			entity.getEmail(),
 	    			entity.getConnectedAt());
-	    	
-	    	int status = preparedStatement.executeUpdate();
-	    	
-	    	if(status == 0) {
-	    		throw logger.throwing(Level.ERROR,new DaoException("User creation failed."));	    		
-	    	}
-	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		newUser = resultSetToUserEntity(resultSet);
-	    	}else {
-	    		throw logger.throwing(Level.ERROR,new DaoException("User creation failed."));	
-	    	}
-	    	
+			
+			updatedUsers = UtilDao.executeCreate(preparedStatement, this);
+			
+			if(updatedUsers.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
+			
 		} catch (SQLException e) {
-    		throw logger.throwing(Level.ERROR,new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connection);
 		}
 	    
-		return newUser;
+		return updatedUsers.get(0);
 	}
 
 	@Override
-	public void delete(User entity) {
+	public User delete(User entity) {
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
+	    List<User> updatedUsers = new ArrayList<User>();
 		
 	    String sqlReq = String.format(SqlPattern.DELETE, UserContract.TABLE_NAME, UserContract.COL_ID_NAME+" = ?");
 		
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, false, entity.getId());
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, entity.getId());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedUsers =  UtilDao.executeDelete(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		
-	    		throw logger.throwing(Level.ERROR,new DaoException("User delete failed."));	    		
-	    	}
+			if(updatedUsers.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
-			
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
 			UtilDao.silentClose(preparedStatement, connexion);
 		}
+	    
+		return updatedUsers.get(0);
 	}
 
 	@Override
 	public User update(User entity) {
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    User updatedUser = null;
+	    List<User> updatedUsers = new ArrayList<User>();
 		
 	    String sqlReq = String.format(SqlPattern.UPDATE, UserContract.TABLE_NAME,
 	    		  UserContract.COL_USERNAME_NAME+" = ?,"
@@ -114,120 +104,93 @@ public final class UserDao extends CommonDao<User> {
 	    		+ UserContract.COL_CONNECTED_AT_NAME+" = ?"
 	    		, UserContract.COL_ID_NAME+" = ?");
 		
-	    User databaseUser = findById(entity.getId()); 
+	    User databaseUser = findById(entity.getId());
 	    
-	    if(databaseUser.getPassword() != entity.getPassword()) {
-	    	if(checkPassword(entity.getPassword(),databaseUser.getPassword())) {
-	    		entity.setPassword(databaseUser.getPassword());
-	    	}else {
-	    		entity.setPassword(hashPassword(entity.getPassword()));
+	    if(databaseUser.getPassword() != entity.getPassword()) { // if bean contain hashed password
+	    	if(UtilDao.checkPassword(entity.getPassword(),databaseUser.getPassword())) { // if bean contain good clear password
+	    		entity.setPassword(databaseUser.getPassword()); // replace by hashed password in entity
+	    	}else { // bean contain new password
+	    		entity.setPassword(UtilDao.hashPassword(entity.getPassword())); // hash new password
 	    	}
 	    }
 	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, 
 	    			entity.getUsername(),
 	    			entity.getPassword(),
 	    			entity.getEmail(),
 	    			entity.getConnectedAt(),
 	    			entity.getId());
+	    
+	    	updatedUsers = UtilDao.executeUpdate(preparedStatement, this);
 	    	
-	    	int status = preparedStatement.executeUpdate();
-	    	
-	    	if(status == 0) {
-	    		throw logger.throwing(Level.ERROR, new DaoException("User update failed."));	    		
-	    	}
-	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		updatedUser = resultSetToUserEntity(resultSet);
-	    	}else {
-	    		throw logger.throwing(Level.ERROR, new DaoException("User update failed."));
-	    	}
-	    	
+			if(updatedUsers.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 			
 		} catch (SQLException e) {
 			
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 			
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connexion);
 		}
 		
-		return updatedUser;
+		return updatedUsers.get(0);
 	}
 
 	@Override
-	protected List<User> find(String columnName, String operator, Object value) {
+	protected List<User> read(String columnName, String operator, Object value) {
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
 	    List<User> users = new ArrayList<User>();
-		
+	    
 	    String sqlReq = String.format(SqlPattern.SELECT,"*",UserContract.TABLE_NAME, columnName+" "+operator+" ?");
 		
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, false, value);
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, value);
 	    	
-	    	resultSet = preparedStatement.executeQuery();
+	    	users = UtilDao.executeRead(preparedStatement, this);
 	    	
-	    	while (resultSet.next()) {
-				users.add(resultSetToUserEntity(resultSet));
-			}
 			
 		} catch (SQLException e) {
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connexion);
 		}
-		
+	    
 		return users;
 	}
 	
 	public User findById(String id){
-		List<User> users = find(UserContract.COL_ID_NAME, "=", id);
+		List<User> users = read(UserContract.COL_ID_NAME, "=", id);
 		return users.get(0);
 	}
 	
 	public User findByEmail(String email) {
-		List<User> users = find(UserContract.COL_EMAIL_NAME, "=", email);
+		List<User> users = read(UserContract.COL_EMAIL_NAME, "=", email);
 		return users.get(0);
 	}
 	
 	public List<User> findByUserName(String username) {
-		List<User> users = find(UserContract.COL_EMAIL_NAME, "=", username);
+		List<User> users = read(UserContract.COL_EMAIL_NAME, "=", username);
 		return users;
 	}
-	
-	private User resultSetToUserEntity(ResultSet resultSet){
-		
+
+	@Override
+	public User convert(ResultSet resultSet) throws SQLException {
 		User user = new User();
-		
-		try {
-			user.setId(resultSet.getString(UserContract.COL_ID_NAME));
-			user.setUsername(resultSet.getString(UserContract.COL_USERNAME_NAME));
-			user.setPassword(resultSet.getString(UserContract.COL_PASSWORD_NAME));
-			user.setEmail(resultSet.getString(UserContract.COL_EMAIL_NAME));
-			user.setConnectedAt(resultSet.getTimestamp(UserContract.COL_CONNECTED_AT_NAME));
-			user.setCreatedAt(resultSet.getTimestamp(UserContract.COL_CREATED_AT_NAME));
-			user.setModifiedAt(resultSet.getTimestamp(UserContract.COL_MODIFIED_AT_NAME));
-		} catch (SQLException e) {
-			throw logger.throwing(Level.ERROR,new DaoException(e));
-		}
+	
+		user.setId(resultSet.getString(UserContract.COL_ID_NAME));
+		user.setUsername(resultSet.getString(UserContract.COL_USERNAME_NAME));
+		user.setPassword(resultSet.getString(UserContract.COL_PASSWORD_NAME));
+		user.setEmail(resultSet.getString(UserContract.COL_EMAIL_NAME));
+		user.setConnectedAt(resultSet.getTimestamp(UserContract.COL_CONNECTED_AT_NAME));
+		user.setCreatedAt(resultSet.getTimestamp(UserContract.COL_CREATED_AT_NAME));
+		user.setUpdatedAt(resultSet.getTimestamp(UserContract.COL_UPDATED_AT_NAME));
 		
 		return user;
-		
 	}
-	
-	private static String hashPassword(String password) {
-	    return BCrypt.hashpw(password, BCrypt.gensalt(Integer.parseInt(UtilProperties.getConfProperty("conf.jbcrypt.saltComplexity"))));
-	}
-	
-	public static boolean checkPassword(String candidatePwd, String hashedPwd) {
-	    return BCrypt.checkpw(candidatePwd, hashedPwd);
-	}
-
 }

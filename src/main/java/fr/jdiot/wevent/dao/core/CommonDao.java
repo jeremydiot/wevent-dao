@@ -14,9 +14,9 @@ public abstract class CommonDao<T> {
 	
 	public abstract T create(T entity);
 	
-	public abstract void delete(T entity);
+	public abstract T delete(T entity);
 	
 	public abstract T update(T entity);
 	
-	protected abstract List<T> find(String columnName, String operator, Object value);
+	protected abstract List<T> read(String columnName, String operator, Object value);
 }

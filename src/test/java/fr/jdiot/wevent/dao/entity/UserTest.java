@@ -66,8 +66,8 @@ public class UserTest {
 
 	@Test
 	void modifiedAtTest() {
-		user.setModifiedAt(timestamp);
-		assertEquals(user.getModifiedAt(), timestamp);
+		user.setUpdatedAt(timestamp);
+		assertEquals(user.getUpdatedAt(), timestamp);
 
 	}
 	

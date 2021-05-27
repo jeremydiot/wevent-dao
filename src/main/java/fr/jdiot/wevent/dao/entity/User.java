@@ -13,7 +13,7 @@ public class User {
 	private String email;
 	private Timestamp connectedAt;
 	private Timestamp createdAt;
-	private Timestamp modifiedAt;
+	private Timestamp updatedAt;
 	
 	public User() {}
 	
@@ -53,11 +53,11 @@ public class User {
 	public void setCreatedAt(Timestamp createdAt) {
 		this.createdAt = createdAt;
 	}
-	public Timestamp getModifiedAt() {
-		return modifiedAt;
+	public Timestamp getUpdatedAt() {
+		return updatedAt;
 	}
-	public void setModifiedAt(Timestamp modifiedAt) {
-		this.modifiedAt = modifiedAt;
+	public void setUpdatedAt(Timestamp updatedAt) {
+		this.updatedAt = updatedAt;
 	}
 	
 	public String toString() {

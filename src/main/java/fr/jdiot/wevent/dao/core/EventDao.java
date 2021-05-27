@@ -17,10 +17,11 @@ import fr.jdiot.wevent.dao.contract.EventContract;
 import fr.jdiot.wevent.dao.entity.Event;
 import fr.jdiot.wevent.dao.entity.User;
 import fr.jdiot.wevent.dao.exception.DaoException;
+import fr.jdiot.wevent.dao.util.ResultSetToEntity;
 import fr.jdiot.wevent.dao.util.SqlPattern;
 import fr.jdiot.wevent.dao.util.UtilDao;
 
-public final class EventDao extends CommonDao<Event> {
+public final class EventDao extends CommonDao<Event> implements ResultSetToEntity<Event> {
 	
 	protected static final Logger logger = LogManager.getLogger();
 
@@ -33,8 +34,7 @@ public final class EventDao extends CommonDao<Event> {
 		
 	    Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    Event newEvent = null;
+	    List<Event> updatedEvents = new ArrayList<Event>();
 	    
 	    String sqlReq = String.format(SqlPattern.INSERT, EventContract.TABLE_NAME,
 	    		  EventContract.COL_ADMIN_ID_NAME+","
@@ -46,68 +46,59 @@ public final class EventDao extends CommonDao<Event> {
 	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, 
 	    			entity.getAdmin().getId(),
 	    			entity.getTitle(),
 	    			entity.getStartDate(),
 	    			entity.getEndDate(),
 	    			entity.getContent());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedEvents = UtilDao.executeCreate(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		
-	    		throw logger.throwing(Level.ERROR,new DaoException("Event creation failed."));
-	    		
-	    	}
 	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		newEvent = resultSetToEventEntity(resultSet);
-	    	}else {
-	    		
-	    		logger.error(new DaoException("Event creation failed."));
-	    		
-	    	}
+			if(updatedEvents.size() < 1 ) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 			
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connexion);
 		}
 	    
-		return newEvent;
+		return updatedEvents.get(0);
 	}
 
 	@Override
-	public void delete(Event entity) {
+	public Event delete(Event entity) {
 		
 		Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
+	    List<Event> updatedEvents = new ArrayList<Event>();
 	    
 	    String sqlReq = String.format(SqlPattern.DELETE, EventContract.TABLE_NAME, EventContract.COL_ID_NAME+" = ?");
 	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, false, entity.getId());
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, entity.getId());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedEvents = UtilDao.executeDelete(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		
-	    		throw logger.throwing(Level.ERROR,new DaoException("Event delete failed."));
-	    		
-	    	}
+	    	
+			if(updatedEvents.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
 			
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 			
 		}finally {
 			UtilDao.silentClose(preparedStatement, connexion);
 		}
+	    
+		return updatedEvents.get(0);
 	}
 
 	@Override
@@ -115,8 +106,7 @@ public final class EventDao extends CommonDao<Event> {
 		
 	    Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
-	    Event updatedEvent = null;
+	    List<Event> updatedEvents = new ArrayList<Event>();
 	    
 	    String sqlReq = String.format(SqlPattern.UPDATE, EventContract.TABLE_NAME,
 	    		  EventContract.COL_ADMIN_ID_NAME+" = ?,"
@@ -128,7 +118,7 @@ public final class EventDao extends CommonDao<Event> {
 	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, true, 
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, 
 	    			entity.getAdmin().getId(),
 	    			entity.getTitle(),
 	    			entity.getStartDate(),
@@ -136,103 +126,85 @@ public final class EventDao extends CommonDao<Event> {
 	    			entity.getContent(),
 	    			entity.getId());
 	    	
-	    	int status = preparedStatement.executeUpdate();
+	    	updatedEvents = UtilDao.executeUpdate(preparedStatement, this);
 	    	
-	    	if(status == 0) {
-	    		
-	    		throw logger.throwing(Level.ERROR,new DaoException("Event update failed."));	    		
-	    	}
-	    	
-	    	resultSet = preparedStatement.getGeneratedKeys();
-	    	
-	    	if(resultSet.next()) {
-	    		updatedEvent = resultSetToEventEntity(resultSet);
-	    	}else {
-	    		logger.error(new DaoException("Event update failed."));
-	    	}
+	    	if(updatedEvents.size() < 1) {
+				throw logger.throwing(Level.ERROR,new DaoException("SQL query failed !"));
+			}
 	    	
 		} catch (SQLException e) {
-			logger.error(new DaoException(e));
+			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connexion);
 		}
 	    
-		return updatedEvent;
+		return updatedEvents.get(0);
 	}
 
 	@Override
-	protected List<Event> find(String columnName, String operator, Object value) {
+	protected List<Event> read(String columnName, String operator, Object value) {
 	    Connection connexion = null;
 	    PreparedStatement preparedStatement = null;
-	    ResultSet resultSet = null;
 	    List<Event> events = new ArrayList<Event>();
 	    
 	    String sqlReq = String.format(SqlPattern.SELECT,"*",EventContract.TABLE_NAME, columnName+" "+operator+" ?");
 	    
 	    try {
 	    	connexion = this.connectionPool.getConnection();
-	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, false, value);
+	    	preparedStatement = UtilDao.initPreparedStmt(connexion, sqlReq, value);
 	    	
-	    	resultSet = preparedStatement.executeQuery();
-	    	
-	    	while (resultSet.next()) {
-	    		events.add(resultSetToEventEntity(resultSet));
-	    	}
+	    	events = UtilDao.executeRead(preparedStatement, this);
 	    	
 		} catch (SQLException e) {
 			throw logger.throwing(Level.ERROR,new DaoException(e));
 		}finally {
-			UtilDao.silentClose(resultSet, preparedStatement, connexion);
+			UtilDao.silentClose(preparedStatement, connexion);
 		}
 	    
 		return events;
 	}
 	
 	public Event findById(String id) {
-		List<Event> events = find(EventContract.COL_ID_NAME,"=", id); 
+		List<Event> events = read(EventContract.COL_ID_NAME,"=", id); 
 		return events.get(0);
 	}
 	
 	public List<Event> findByAdmin(User admin) {
-		List<Event> events = find(EventContract.COL_ADMIN_ID_NAME,"=", admin.getId()); 
+		List<Event> events = read(EventContract.COL_ADMIN_ID_NAME,"=", admin.getId()); 
 		return events;
 	}
 	
 	public List<Event> findByTitle(String title) {
-		List<Event> events = find(EventContract.COL_TITLE_NAME,"~*", ".*"+title+".*"); 
+		List<Event> events = read(EventContract.COL_TITLE_NAME,"~*", ".*"+title+".*"); 
 		return events;
 	}
 	
 	public List<Event> findByDateGreater(Timestamp date) {
-		List<Event> events = find(EventContract.COL_START_DATE_NAME,">=",date); 
+		List<Event> events = read(EventContract.COL_START_DATE_NAME,">=",date); 
 		return events;
 	}
 	
 	public List<Event> findByDateLess(Timestamp date) {
-		List<Event> events = find(EventContract.COL_START_DATE_NAME,"<=",date); 
+		List<Event> events = read(EventContract.COL_START_DATE_NAME,"<=",date); 
 		return events;
 	}
-	
-	private Event resultSetToEventEntity(ResultSet resultSet)  {
+
+	@Override
+	public Event convert(ResultSet resultSet) throws SQLException{
 		UserDao userDao = new UserDao(this.connectionPool);
+		
+		User userAdmin = userDao.findById(resultSet.getString(EventContract.COL_ADMIN_ID_NAME));
+		
 		Event event = new Event();
 		
-		try {
-			
-			User admin = userDao.findById(resultSet.getString(EventContract.COL_ADMIN_ID_NAME));
-			
-			event.setId(resultSet.getString(EventContract.COL_ID_NAME));
-			event.setAdmin(admin);
-			event.setTitle(resultSet.getString(EventContract.COL_TITLE_NAME));
-			event.setStartDate(resultSet.getTimestamp(EventContract.COL_START_DATE_NAME));
-			event.setEndDate(resultSet.getTimestamp(EventContract.COL_END_DATE_NAME));
-			event.setContent(resultSet.getString(EventContract.COL_CONTENT_NAME));
-			event.setCreatedAt(resultSet.getTimestamp(EventContract.COL_CREATED_AT_NAME));
-			event.setModifiedAt(resultSet.getTimestamp(EventContract.COL_MODIFIED_AT_NAME));
-			
-		}catch (SQLException e) {
-			throw logger.throwing(Level.ERROR,new DaoException(e));
-		}
+		event.setId(resultSet.getString(EventContract.COL_ID_NAME));
+		event.setAdmin(userAdmin);
+		event.setTitle(resultSet.getString(EventContract.COL_TITLE_NAME));
+		event.setStartDate(resultSet.getTimestamp(EventContract.COL_START_DATE_NAME));
+		event.setEndDate(resultSet.getTimestamp(EventContract.COL_END_DATE_NAME));
+		event.setContent(resultSet.getString(EventContract.COL_CONTENT_NAME));
+		event.setCreatedAt(resultSet.getTimestamp(EventContract.COL_CREATED_AT_NAME));
+		event.setUpdatedAt(resultSet.getTimestamp(EventContract.COL_UPDATED_AT_NAME));
 		
 		return event;
 	}

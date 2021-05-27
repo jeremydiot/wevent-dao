@@ -41,6 +41,7 @@
         
         <maven.compiler>3.8.1</maven.compiler>
         <maven.surefire>3.0.0-M5</maven.surefire>
+        <maven.failsafe>3.0.0-M5</maven.failsafe>
         <maven.jar>3.2.0</maven.jar>
         <maven.site>3.9.1</maven.site>
         <jacoco>0.8.6</jacoco>
@@ -109,6 +110,15 @@
 		    <version>${mockito}</version>
 		    <scope>test</scope>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.mockito/mockito-inline -->
+		<dependency>
+		    <groupId>org.mockito</groupId>
+		    <artifactId>mockito-inline</artifactId>
+		    <version>${mockito}</version>
+		    <scope>test</scope>
+		</dependency>
+		
 		
 		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
 		<dependency>
