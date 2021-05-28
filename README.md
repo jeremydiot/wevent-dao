@@ -1,5 +1,5 @@
 # wevent-dao
-wevent project => API-REST DAO
+example java DAO for wevent project
 
 ## prerequisite
 - PostgreSQL database
