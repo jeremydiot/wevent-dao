@@ -36,11 +36,11 @@ class UtilDaoTest {
 	@Test
 	void initPreparedStmtTestWithArg() throws SQLException {
 		
-		Mockito.when(connection.prepareStatement(Mockito.anyString(),Mockito.anyInt())).thenReturn(preparedStatement);
+		Mockito.when(connection.prepareStatement(Mockito.anyString())).thenReturn(preparedStatement);
 		
-		PreparedStatement preparedStatementTest = UtilDao.initPreparedStmt(connection, "foo ? baz ?", false, "bar", "test");
+		PreparedStatement preparedStatementTest = UtilDao.initPreparedStmt(connection, "foo ? baz ?", "bar", "test");
 		
-		Mockito.verify(connection, Mockito.times(1)).prepareStatement("foo ? baz ?",2);
+		Mockito.verify(connection, Mockito.times(1)).prepareStatement("foo ? baz ?");
 		Mockito.verify(preparedStatement, Mockito.times(1)).setObject(1, "bar");
 		Mockito.verify(preparedStatement, Mockito.times(1)).setObject(2, "test");
 		Mockito.verify(preparedStatement, Mockito.times(2)).setObject(Mockito.anyInt(), Mockito.anyString());
@@ -51,11 +51,11 @@ class UtilDaoTest {
 	@Test
 	void initPreparedStmtTestWithoutArg() throws SQLException {
 		
-		Mockito.when(connection.prepareStatement(Mockito.anyString(),Mockito.anyInt())).thenReturn(preparedStatement);
+		Mockito.when(connection.prepareStatement(Mockito.anyString())).thenReturn(preparedStatement);
 		
-		PreparedStatement preparedStatementTest = UtilDao.initPreparedStmt(connection, "foo baz", true);
+		PreparedStatement preparedStatementTest = UtilDao.initPreparedStmt(connection, "foo baz");
 		
-		Mockito.verify(connection, Mockito.times(1)).prepareStatement("foo baz",1);
+		Mockito.verify(connection, Mockito.times(1)).prepareStatement("foo baz");
 		Mockito.verify(preparedStatement, Mockito.times(0)).setObject(Mockito.anyInt(), Mockito.any());
 		
 		assertEquals(preparedStatementTest, preparedStatement);	
@@ -192,79 +192,6 @@ class UtilDaoTest {
 	}
 	
 	@Test
-	void executeCreateTestStatusException() throws SQLException {
-		Mockito.when(preparedStatement.executeUpdate()).thenReturn(0);
-		
-		assertThrows(DaoException.class, new Executable() {
-			
-			@Override
-			public void execute() throws Throwable {
-				UtilDao.executeCreate(preparedStatement, new ResultSetToEntity<String>() {
-
-					@Override
-					public String convert(ResultSet resultset) {
-						String value = null;
-						try {
-							value = resultset.getString(1);
-						} catch (SQLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						return value;
-					}
-				});
-
-				
-			}
-		});
-		
-				
-		Mockito.verify(preparedStatement, Mockito.times(1)).executeUpdate();
-		Mockito.verify(preparedStatement, Mockito.times(0)).getGeneratedKeys();
-		Mockito.verify(resultSet, Mockito.times(0)).next();
-		Mockito.verify(resultSet, Mockito.times(0)).getString(Mockito.anyInt());
-		Mockito.verify(resultSet, Mockito.times(0)).close();
-
-	}
-	
-	@Test
-	void executeCreateTestSQLException() throws SQLException {
-		Mockito.doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-		
-		assertThrows(DaoException.class, new Executable() {
-			
-			@Override
-			public void execute() throws Throwable {
-				UtilDao.executeCreate(preparedStatement, new ResultSetToEntity<String>() {
-
-					@Override
-					public String convert(ResultSet resultset) {
-						String value = null;
-						try {
-							value = resultset.getString(1);
-						} catch (SQLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						return value;
-					}
-				});
-
-				
-			}
-		});
-		
-				
-		Mockito.verify(preparedStatement, Mockito.times(1)).executeUpdate();
-		Mockito.verify(preparedStatement, Mockito.times(0)).getGeneratedKeys();
-		Mockito.verify(resultSet, Mockito.times(0)).next();
-		Mockito.verify(resultSet, Mockito.times(0)).getString(Mockito.anyInt());
-		Mockito.verify(resultSet, Mockito.times(0)).close();
-
-	}
-	
-	
-	@Test
 	void  executeReadTest() throws SQLException {
 		Mockito.when(preparedStatement.executeQuery()).thenReturn(resultSet);
 		Mockito.when(resultSet.next()).thenReturn(true, true, false);
@@ -292,41 +219,6 @@ class UtilDaoTest {
 		
 		assertEquals(returnedValues.get(0), "resultSet1");
 		assertEquals(returnedValues.get(1), "resultSet2");
-		
-	}
-	
-	@Test
-	void  executeReadTestSQLException() throws SQLException {
-		Mockito.doThrow(SQLException.class).when(preparedStatement).executeQuery();
-		
-		assertThrows(DaoException.class, new Executable() {
-			
-			@Override
-			public void execute() throws Throwable {
-				UtilDao.executeRead(preparedStatement, new ResultSetToEntity<String>() {
-
-					@Override
-					public String convert(ResultSet resultSet) {
-						String value = null;
-						try {
-							value = resultSet.getString(1);
-						} catch (SQLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						return value;
-					}
-				});
-				
-			}
-		});
-		
-
-		
-		Mockito.verify(preparedStatement,Mockito.times(1)).executeQuery();
-		Mockito.verify(resultSet,Mockito.times(0)).next();
-		Mockito.verify(resultSet,Mockito.times(0)).getString(Mockito.anyInt());
-		Mockito.verify(resultSet,Mockito.times(0)).close();
 		
 	}
 	
